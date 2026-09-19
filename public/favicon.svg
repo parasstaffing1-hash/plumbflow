@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14171E"/>
+      <stop offset="100%" stop-color="#08090C"/>
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="40%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7DD3FC"/>
+      <stop offset="40%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="502" height="502" x="5" y="5" rx="107" stroke="#F59E0B" stroke-opacity="0.25" stroke-width="6" fill="none"/>
+
+  <!-- Glowing Water Droplet (Top-Left) -->
+  <g filter="url(#glow)">
+    <!-- Droplet Body -->
+    <path d="M 185 115 C 185 115 130 190 130 235 A 55 55 0 0 0 240 235 C 240 190 185 115 185 115 Z" fill="url(#cyanGrad)"/>
+    <!-- Amber Inner Light Core -->
+    <path d="M 175 135 C 175 135 145 190 145 225 A 40 40 0 0 0 215 245 C 190 235 165 200 175 135 Z" fill="url(#amberGrad)" opacity="0.9"/>
+  </g>
+
+  <!-- Flowing Pipe 'P' in Amber & Cyan -->
+  <g filter="url(#glow)">
+    <!-- Outer Amber Pipe Sweep -->
+    <path d="M 245 125 H 280 C 355 125 400 175 400 240 C 400 300 360 345 295 345 H 225 V 400"
+          stroke="url(#amberGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Amber Flanges -->
+    <rect x="238" y="111" width="12" height="28" rx="4" fill="#F59E0B"/>
+    <rect x="211" y="394" width="28" height="12" rx="4" fill="#F59E0B"/>
+
+    <!-- Inner Cyan Pipe Sweep -->
+    <path d="M 245 160 H 275 C 325 160 360 195 360 240 C 360 278 335 305 285 305 H 260 V 400"
+          stroke="url(#cyanGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Cyan Flanges -->
+    <rect x="238" y="149" width="10" height="22" rx="3" fill="#06B6D4"/>
+    <rect x="249" y="394" width="22" height="10" rx="3" fill="#06B6D4"/>
+  </g>
+</svg>

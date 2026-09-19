@@ -28,6 +28,7 @@ export default defineConfig({
                 return "vendor-icons";
               }
             }
+            return undefined;
           },
         },
       },

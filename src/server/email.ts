@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
-const apiKey = process.env.RESEND_API_KEY || "";
-const defaultFrom = process.env.RESEND_FROM_EMAIL || "RCH PlumbFlow <onboarding@resend.dev>";
+const apiKey = process.env["RESEND_API_KEY"] || "";
+const defaultFrom = process.env["RESEND_FROM_EMAIL"] || "RCH PlumbFlow <onboarding@resend.dev>";
 
 export const resend = new Resend(apiKey);
 

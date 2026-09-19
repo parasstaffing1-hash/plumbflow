@@ -46,14 +46,14 @@ export const DEMO_OAUTH_PROFILES: OAuthProfile[] = [
 export function getGoogleClientId(): string {
   if (typeof window === "undefined") return "";
   return (
-    (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID || ""
+    (import.meta as unknown as { env?: Record<string, string> }).env?.["VITE_GOOGLE_CLIENT_ID"] || ""
   );
 }
 
 export function getAppleClientId(): string {
   if (typeof window === "undefined") return "";
   return (
-    (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_APPLE_CLIENT_ID || ""
+    (import.meta as unknown as { env?: Record<string, string> }).env?.["VITE_APPLE_CLIENT_ID"] || ""
   );
 }
 

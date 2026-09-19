@@ -104,7 +104,9 @@ function OtpInput({
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <input
           key={i}
-          ref={(el) => (inputRefs.current[i] = el)}
+          ref={(el) => {
+            inputRefs.current[i] = el;
+          }}
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
@@ -302,8 +304,8 @@ function SignupPage() {
       return;
     }
 
-    // Accepts generated session code, or universal master preview code 424242
-    const isValid = cleanInput === generatedCode || cleanInput === "424242";
+    // Validate against strictly generated verification code
+    const isValid = cleanInput === generatedCode;
     if (!isValid) {
       toast.error("Invalid verification code. Please check your inbox and try again.");
       return;

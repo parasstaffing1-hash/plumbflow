@@ -62,7 +62,7 @@ export interface Account {
   setup: SetupProgress;
   statusReason?: string;
   password?: string;
-  authProvider?: "password" | "google" | "apple" | "demo";
+  authProvider?: "password" | "google" | "apple";
   avatarUrl?: string;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
@@ -574,9 +574,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           invoicedTotal: 0,
           collectedTotal: 0,
           setup: setup(0),
-          password: input.password || "demo123",
+          password: input.password || "",
           emailVerified: input.emailVerified ?? false,
-          emailVerifiedAt: input.emailVerified ? now.toISOString() : undefined,
+          ...(input.emailVerified ? { emailVerifiedAt: now.toISOString() } : {}),
         };
         update((draft) => {
           draft.accounts.unshift(account);
@@ -600,12 +600,12 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           return { success: false, error: "EMAIL_NOT_FOUND" };
         }
 
-        const validPass = match.password || "demo123";
+        const validPass = match.password;
         if (
           password !== undefined &&
           password !== "" &&
-          password !== validPass &&
-          password !== "demo123"
+          validPass &&
+          password !== validPass
         ) {
           return { success: false, account: match, error: "WRONG_PASSWORD" };
         }
@@ -678,10 +678,11 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           quotesAccepted: 0,
           invoicedTotal: 0,
           collectedTotal: 0,
-          setup: setup(0),
-          password: "demo123",
+          setup: setup(1),
           authProvider: provider,
-          avatarUrl,
+          emailVerified: true,
+          emailVerifiedAt: now.toISOString(),
+          ...(avatarUrl ? { avatarUrl } : {}),
         };
 
         update((draft) => {

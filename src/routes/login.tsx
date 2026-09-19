@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, KeyRound, ArrowRight, Mail, CheckCircle2, RefreshCw } from "lucide-react";
 import { SiteHeader } from "@/components/marketing/Site";
@@ -15,9 +15,10 @@ interface LoginSearch {
 }
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
+    const raw = search["redirect"];
+    return typeof raw === "string" ? { redirect: raw } : {};
+  },
   head: () => ({
     meta: [
       { title: TITLE },
@@ -130,12 +131,6 @@ function LoginPage() {
     handleOAuthLanding();
   }, [loginWithOAuth, navigate, redirectTarget]);
 
-  function handleQuickLogin(accountId: string, businessName: string) {
-    setCurrentAccount(accountId);
-    toast.success(`Logged in as ${businessName}`);
-    navigate({ to: redirectTarget });
-  }
-
   function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
@@ -157,7 +152,7 @@ function LoginPage() {
     }
 
     if (result.error === "WRONG_PASSWORD") {
-      toast.error("Incorrect password. Demo accounts use password: demo123");
+      toast.error("Incorrect password. Please check your credentials.");
       return;
     }
 
@@ -204,14 +199,12 @@ function LoginPage() {
 
       if (res.success) {
         toast.success(`Reset code sent to ${cleanEmail}! Check your inbox.`);
-        setSentNotice(`Email delivered via Resend (ID: ${res.id?.slice(0, 8)}...)`);
+        setSentNotice(`Reset code dispatched via email (ID: ${res.id?.slice(0, 8)}...)`);
       } else {
-        toast.info(`Demo Code: ${code} (${res.error})`);
-        setSentNotice(`Demo Security Code: ${code}`);
+        toast.error(res.error || "Could not dispatch reset email. Please try again.");
       }
     } catch {
-      toast.info(`Demo Code: ${code}`);
-      setSentNotice(`Demo Security Code: ${code}`);
+      toast.error("Network error while requesting reset code. Please try again.");
     } finally {
       setSendingReset(false);
       setResetStep("code");
@@ -250,7 +243,7 @@ function LoginPage() {
       <main className="mx-auto max-w-md px-4 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
         <p className="mt-2 text-[16px] text-slate">
-          Sign in to your account, continue with Google or Apple, or use demo access below.
+          Sign in to your account, or continue with Google or Apple.
         </p>
 
         <div className="mt-6">
@@ -325,44 +318,6 @@ function LoginPage() {
             Start a free trial
           </Link>
         </p>
-
-        {/* Demo Quick Access */}
-        <div className="mt-8 rounded-xl border border-line bg-paper p-4">
-          <div className="flex items-center justify-between">
-            <p className="label-caps text-slate">Demo Accounts (1-Click Access)</p>
-            <span className="rounded border border-line bg-surface px-2 py-0.5 text-xs text-fog">
-              Pass: demo123
-            </span>
-          </div>
-          <ul className="mt-3 divide-y divide-line text-[15px] text-slate">
-            {data.accounts.slice(0, 4).map((account) => (
-              <li key={account.id} className="flex items-center justify-between py-2.5">
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail(account.email);
-                      setPassword("demo123");
-                    }}
-                    className="block text-left font-semibold text-ink hover:text-amber-deep"
-                  >
-                    {account.ownerName}
-                  </button>
-                  <span className="text-xs text-slate">
-                    {account.businessName} &bull; {account.email}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin(account.id, account.businessName)}
-                  className="rounded-lg border border-amber/40 bg-amber-wash px-3 py-1.5 text-xs font-semibold text-ink hover:bg-amber"
-                >
-                  Log in
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
       </main>
 
       {/* Resend Powered Forgot Password Modal */}

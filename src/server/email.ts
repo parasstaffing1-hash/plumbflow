@@ -160,7 +160,7 @@ export async function sendWelcomeEmail(params: SendWelcomeEmailParams): Promise<
         Everything you need to quote, complete jobs, and get paid faster is ready in your account.
       </p>
       <div style="text-align: center; margin-bottom: 24px;">
-        <a href="http://localhost:8080/app" style="display: inline-block; background-color: #f59e0b; color: #0b0d0e; font-size: 16px; font-weight: 700; padding: 14px 28px; border-radius: 10px; text-decoration: none;">
+        <a href="https://rchplumbflow.co.uk/app" style="display: inline-block; background-color: #f59e0b; color: #0b0d0e; font-size: 16px; font-weight: 700; padding: 14px 28px; border-radius: 10px; text-decoration: none;">
           Open PlumbFlow App
         </a>
       </div>

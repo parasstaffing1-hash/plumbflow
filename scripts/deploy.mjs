@@ -61,9 +61,11 @@ child.on("close", async (code) => {
         },
         body: JSON.stringify({ enabled: true }),
       });
-      console.log("🌐 Live Edge URL: https://plumbflow.voicefield.workers.dev\n");
+      console.log("🌐 Production Custom Domain: https://rchplumbflow.co.uk");
+      console.log("🌐 Production WWW Domain:    https://www.rchplumbflow.co.uk");
+      console.log("🌐 Edge Worker Fallback:      https://plumbflow.voicefield.workers.dev\n");
     } catch (e) {
-      console.log("🌐 URL: https://plumbflow.voicefield.workers.dev (check dashboard if subdomain is enabled)\n");
+      console.log("🌐 Production Custom Domain: https://rchplumbflow.co.uk\n");
     }
   } else {
     console.error(`\n❌ Deployment failed with exit code ${code}`);

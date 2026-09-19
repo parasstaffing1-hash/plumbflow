@@ -1,9 +1,19 @@
 import { Resend } from "resend";
 
-const apiKey = process.env["RESEND_API_KEY"] || "";
-const defaultFrom = process.env["RESEND_FROM_EMAIL"] || "RCH PlumbFlow <onboarding@resend.dev>";
+function getResendClient() {
+  const apiKey = process.env["RESEND_API_KEY"] || "";
+  return new Resend(apiKey);
+}
 
-export const resend = new Resend(apiKey);
+function getDefaultFrom() {
+  return process.env["RESEND_FROM_EMAIL"] || "RCH PlumbFlow <onboarding@resend.dev>";
+}
+
+export const resend = {
+  get emails() {
+    return getResendClient().emails;
+  },
+};
 
 export interface SendResetEmailParams {
   to: string;
@@ -98,7 +108,7 @@ export async function sendPasswordResetEmail(params: SendResetEmailParams): Prom
 
   try {
     const { data, error } = await resend.emails.send({
-      from: defaultFrom,
+      from: getDefaultFrom(),
       to,
       subject: "Reset your RCH PlumbFlow password",
       html,
@@ -107,14 +117,18 @@ export async function sendPasswordResetEmail(params: SendResetEmailParams): Prom
 
     if (error) {
       console.error("[Resend] Failed to send password reset email:", error);
-      return { success: false, error: error.message };
+      const isSandbox =
+        Boolean(error.message?.toLowerCase().includes("only send testing emails")) ||
+        (error as { statusCode?: number }).statusCode === 403;
+      return { success: false, error: error.message, isSandboxRestriction: isSandbox };
     }
 
     return { success: true, id: data?.id };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[Resend] Exception sending password reset email:", msg);
-    return { success: false, error: msg };
+    const isSandbox = msg.toLowerCase().includes("only send testing emails");
+    return { success: false, error: msg, isSandboxRestriction: isSandbox };
   }
 }
 
@@ -158,7 +172,7 @@ export async function sendWelcomeEmail(params: SendWelcomeEmailParams): Promise<
 
   try {
     const { data, error } = await resend.emails.send({
-      from: defaultFrom,
+      from: getDefaultFrom(),
       to,
       subject: `Welcome to RCH PlumbFlow, ${ownerName}!`,
       html,
@@ -230,7 +244,7 @@ export async function sendSignupVerificationEmail(
 
   try {
     const { data, error } = await resend.emails.send({
-      from: defaultFrom,
+      from: getDefaultFrom(),
       to,
       subject: `${verificationCode} is your PlumbFlow verification code`,
       html,

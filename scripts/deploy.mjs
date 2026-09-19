@@ -19,6 +19,24 @@ const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || "";
 console.log("🚀 Starting Cloudflare Edge Deployment for PlumbFlow...");
 console.log(`👤 Target Account: ${accountId}`);
 
+// Inject environment variables from .env into .output/server/wrangler.json for Cloudflare edge execution
+const serverWranglerPath = path.resolve(".output/server/wrangler.json");
+if (fs.existsSync(serverWranglerPath)) {
+  const serverConfig = JSON.parse(fs.readFileSync(serverWranglerPath, "utf-8"));
+  serverConfig.vars = {
+    ...(serverConfig.vars || {}),
+    RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || "RCH PlumbFlow <onboarding@resend.dev>",
+    R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID || "",
+    R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID || "",
+    R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || "",
+    R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || "plumbflow",
+    R2_ENDPOINT: process.env.R2_ENDPOINT || "",
+  };
+  fs.writeFileSync(serverWranglerPath, JSON.stringify(serverConfig, null, 2), "utf-8");
+  console.log("📦 Injected server environment variables into edge worker config.");
+}
+
 const wranglerBin = path.resolve("node_modules/wrangler/bin/wrangler.js");
 
 const child = spawn("node", [wranglerBin, "deploy", "--config", ".output/server/wrangler.json"], {

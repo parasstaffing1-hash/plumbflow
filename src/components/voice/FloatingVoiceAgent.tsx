@@ -34,6 +34,7 @@ export function FloatingVoiceAgent() {
     isMuted,
     volume,
     transcripts,
+    errorMessage,
     startCall,
     stopCall,
     toggleMute,

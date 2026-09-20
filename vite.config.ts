@@ -34,6 +34,9 @@ export default defineConfig({
         events: path.resolve("node_modules/events/events.js"),
       },
     },
+    ssr: {
+      external: ["@neondatabase/auth", "@neondatabase/auth/react/adapters"],
+    },
     build: {
       rollupOptions: {
         output: {

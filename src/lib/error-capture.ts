@@ -1,6 +1,22 @@
 // Captures the original Error out-of-band so server.ts can recover the stack
 // when h3 has already swallowed the throw into a generic 500 Response.
 
+// Cloudflare Workers disallows generating random values (crypto.randomUUID) in the global scope.
+// Wrap crypto.randomUUID to safely catch global scope calls and return a deterministic UUID.
+if (
+  typeof globalThis.crypto !== "undefined" &&
+  typeof globalThis.crypto.randomUUID === "function"
+) {
+  const originalRandomUUID = globalThis.crypto.randomUUID.bind(globalThis.crypto);
+  globalThis.crypto.randomUUID = () => {
+    try {
+      return originalRandomUUID();
+    } catch {
+      return "00000000-0000-4000-8000-000000000000";
+    }
+  };
+}
+
 let lastCapturedError: { error: unknown; at: number } | undefined;
 const TTL_MS = 5_000;
 

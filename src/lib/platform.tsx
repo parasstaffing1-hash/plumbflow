@@ -63,7 +63,7 @@ export interface Account {
   setup: SetupProgress;
   statusReason?: string;
   password?: string;
-  authProvider?: "password" | "google" | "apple";
+  authProvider?: "password" | "google" | "apple" | "neon";
   avatarUrl?: string;
   emailVerified?: boolean;
   emailVerifiedAt?: string;
@@ -463,7 +463,7 @@ interface PlatformValue {
   loginWithOAuth: (params: {
     email: string;
     name?: string;
-    provider: "google" | "apple";
+    provider: "google" | "apple" | "neon";
     avatarUrl?: string;
   }) => Account;
   logout: () => void;
@@ -510,8 +510,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     authClient
       .getSession()
       .then((sessionRes) => {
-        if (!active || !sessionRes?.data?.user) return;
-        const neonUser = sessionRes.data.user;
+        const payload = sessionRes?.data as { user?: { email: string } } | null | undefined;
+        if (!active || !payload?.user) return;
+        const neonUser = payload.user;
         setData((prev) => {
           const match = prev.accounts.find(
             (a) => a.email.toLowerCase() === neonUser.email.toLowerCase(),

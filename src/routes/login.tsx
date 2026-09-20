@@ -159,7 +159,9 @@ function LoginPage() {
     }
 
     if (result.error === "EMAIL_NOT_FOUND") {
-      toast.error("No account found with this email address. Please sign up to start your free trial.");
+      toast.error(
+        "No account found with this email address. Please sign up to start your free trial.",
+      );
       return;
     }
 

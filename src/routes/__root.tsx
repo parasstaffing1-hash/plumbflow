@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
 import { PlatformProvider } from "@/lib/platform";
 import { Toaster } from "@/components/ui/sonner";
+import { FloatingVoiceAgent } from "@/components/voice/FloatingVoiceAgent";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,7 @@ function RootComponent() {
       <PlatformProvider>
         <StoreProvider>
           <Outlet />
+          <FloatingVoiceAgent />
           <Toaster position="top-center" />
         </StoreProvider>
       </PlatformProvider>

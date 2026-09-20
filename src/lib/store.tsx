@@ -126,13 +126,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const currentUser = useMemo(() => {
-    const member = data.team.find((m) => m.id === data.currentUserId) ?? data.team[0] ?? {
-      id: "u_default",
-      orgId: data.org.id,
-      name: "Trade Engineer",
-      email: "engineer@rchplumbflow.co.uk",
-      role: "owner" as const,
-    };
+    const member = data.team.find((m) => m.id === data.currentUserId) ??
+      data.team[0] ?? {
+        id: "u_default",
+        orgId: data.org.id,
+        name: "Trade Engineer",
+        email: "engineer@rchplumbflow.co.uk",
+        role: "owner" as const,
+      };
     return member;
   }, [data.team, data.currentUserId, data.org.id]);
 

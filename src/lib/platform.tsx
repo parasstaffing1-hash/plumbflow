@@ -507,8 +507,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const isAuthenticated = Boolean(
       data.currentAccountId && data.accounts.some((a) => a.id === data.currentAccountId),
     );
-    const currentAccount: Account =
-      data.accounts.find((a) => a.id === data.currentAccountId) ??
+    const currentAccount: Account = data.accounts.find((a) => a.id === data.currentAccountId) ??
       data.accounts[0] ?? {
         id: "org_default",
         slug: "default",

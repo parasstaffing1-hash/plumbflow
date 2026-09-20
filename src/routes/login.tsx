@@ -244,7 +244,7 @@ function LoginPage() {
       <main className="mx-auto max-w-md px-4 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Log in</h1>
         <p className="mt-2 text-[16px] text-slate">
-          Sign in to your account, or continue with Google or Apple.
+          Sign in to your account, or continue with Google.
         </p>
 
         <div className="mt-6">

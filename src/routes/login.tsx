@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/marketing/Site";
 import { usePlatform } from "@/lib/platform";
 import { requestPasswordResetEmail } from "@/lib/email";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { authClient } from "@/lib/neon-auth";
 
 const TITLE = "Log in | RCH PlumbFlow";
 const DESCRIPTION = "Log in to your RCH PlumbFlow account and pick up where the job left off.";
@@ -133,7 +134,7 @@ function LoginPage() {
     handleOAuthLanding();
   }, [loginWithOAuth, navigate, redirectTarget]);
 
-  function onSubmit(event: React.FormEvent) {
+  async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail) {
@@ -146,6 +147,39 @@ function LoginPage() {
       return;
     }
 
+    // 1. Attempt Neon Auth authentication first
+    try {
+      const neonRes = await authClient.signIn.email({
+        email: cleanEmail,
+        password,
+      });
+
+      if (neonRes?.data?.user) {
+        const neonUser = neonRes.data.user;
+        const acc = loginWithOAuth({
+          email: neonUser.email,
+          name: neonUser.name || "Trade Engineer",
+          provider: "neon",
+        });
+        toast.success(`Welcome back, ${acc.ownerName}!`);
+        navigate({ to: redirectTarget });
+        return;
+      }
+
+      if (neonRes?.error) {
+        const errCode = (neonRes.error as { code?: string })?.code;
+        if (errCode === "email_not_confirmed") {
+          toast.error(
+            "Email verification required by Neon Auth. Please verify your email before logging in.",
+          );
+          return;
+        }
+      }
+    } catch (neonErr) {
+      console.warn("[Neon Auth] Sign-in notice:", neonErr);
+    }
+
+    // 2. Check local contractor accounts
     const result = login(cleanEmail, password);
     if (result.success && result.account) {
       toast.success(`Welcome back, ${result.account.ownerName}!`);

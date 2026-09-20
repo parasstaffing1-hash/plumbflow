@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { authClient } from "@/lib/neon-auth";
 
 /**
  * Platform-level store (Ray's SaaS business), deliberately separate from the
@@ -503,6 +504,33 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     setData((prev) => fn(structuredClone(prev)));
   }, []);
 
+  // Synchronize active Neon Auth session on mount
+  useEffect(() => {
+    let active = true;
+    authClient
+      .getSession()
+      .then((sessionRes) => {
+        if (!active || !sessionRes?.data?.user) return;
+        const neonUser = sessionRes.data.user;
+        setData((prev) => {
+          const match = prev.accounts.find(
+            (a) => a.email.toLowerCase() === neonUser.email.toLowerCase(),
+          );
+          if (match && prev.currentAccountId !== match.id) {
+            return { ...prev, currentAccountId: match.id };
+          }
+          return prev;
+        });
+      })
+      .catch((err) => {
+        console.warn("[Neon Auth] Session sync notice:", err);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const value = useMemo<PlatformValue>(() => {
     const isAuthenticated = Boolean(
       data.currentAccountId && data.accounts.some((a) => a.id === data.currentAccountId),
@@ -737,11 +765,13 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         });
         return true;
       },
-      logout: () =>
+      logout: () => {
+        authClient.signOut().catch(() => {});
         update((draft) => {
           draft.currentAccountId = "";
           return draft;
-        }),
+        });
+      },
       setCurrentAccount: (id) =>
         update((draft) => {
           draft.currentAccountId = id;

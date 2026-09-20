@@ -32,6 +32,12 @@ if (fs.existsSync(serverWranglerPath)) {
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || "",
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME || "plumbflow",
     R2_ENDPOINT: process.env.R2_ENDPOINT || "",
+    NEON_AUTH_BASE_URL:
+      process.env.NEON_AUTH_BASE_URL ||
+      "https://ep-ancient-salad-b50jp2r7.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth",
+    VITE_NEON_AUTH_URL:
+      process.env.VITE_NEON_AUTH_URL ||
+      "https://ep-ancient-salad-b50jp2r7.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth",
   };
   fs.writeFileSync(serverWranglerPath, JSON.stringify(serverConfig, null, 2), "utf-8");
   console.log("📦 Injected server environment variables into edge worker config.");

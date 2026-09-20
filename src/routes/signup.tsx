@@ -15,6 +15,7 @@ import { SiteHeader, Wordmark } from "@/components/marketing/Site";
 import { usePlatform } from "@/lib/platform";
 import { requestSignupVerificationEmail, triggerWelcomeEmail } from "@/lib/email";
 import { OAuthButtons } from "@/components/auth/OAuthButtons";
+import { authClient } from "@/lib/neon-auth";
 
 const TITLE = "Start your free trial | RCH PlumbFlow";
 const DESCRIPTION =
@@ -349,6 +350,18 @@ function SignupPage() {
     });
 
     clearPendingSession();
+
+    // Register user identity into Neon Auth (Managed Better Auth)
+    try {
+      await authClient.signUp.email({
+        email: cleanEmail,
+        password: form.password,
+        name: cleanOwner,
+        callbackURL: window.location.origin + "/app",
+      });
+    } catch (neonErr) {
+      console.warn("[Neon Auth] Registration notice:", neonErr);
+    }
 
     try {
       await triggerWelcomeEmail({

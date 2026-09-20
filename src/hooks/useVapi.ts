@@ -13,8 +13,12 @@ interface VapiInstance {
   setMuted: (muted: boolean) => void;
   isMuted: () => boolean;
   on: (event: string, callback: (...args: unknown[]) => void) => void;
+  send?: (message: unknown) => void;
+  say?: (text: string) => void;
   cleanup?: () => void;
 }
+
+type VapiConstructor = new (publicKey: string) => VapiInstance;
 
 export function useVapi() {
   const [status, setStatus] = useState<VapiCallStatus>("idle");
@@ -35,10 +39,24 @@ export function useVapi() {
       throw new Error("Vapi can only be instantiated in the browser.");
     }
 
-    const mod = await import("@vapi-ai/web");
-    const VapiClass =
-      (mod.default as unknown as { default?: new (key: string) => VapiInstance })?.default ||
-      (mod.default as unknown as new (key: string) => VapiInstance);
+    const mod = (await import("@vapi-ai/web")) as unknown as {
+      default?: VapiConstructor | { default?: VapiConstructor };
+      Vapi?: VapiConstructor;
+    };
+    const VapiClass: VapiConstructor | undefined =
+      typeof mod.default === "function"
+        ? mod.default
+        : typeof (mod.default as { default?: VapiConstructor })?.default === "function"
+          ? (mod.default as { default?: VapiConstructor }).default
+          : typeof mod.Vapi === "function"
+            ? mod.Vapi
+            : typeof mod === "function"
+              ? (mod as unknown as VapiConstructor)
+              : undefined;
+
+    if (!VapiClass) {
+      throw new Error("Unable to locate Vapi SDK constructor.");
+    }
 
     const client = new VapiClass(VAPI_PUBLIC_KEY);
 
@@ -165,6 +183,32 @@ export function useVapi() {
     setTranscripts([]);
   }, []);
 
+  const send = useCallback(
+    (message: unknown) => {
+      if (vapiRef.current && status === "active" && typeof vapiRef.current.send === "function") {
+        try {
+          vapiRef.current.send(message);
+        } catch (e) {
+          console.warn("[Vapi] Send error:", e);
+        }
+      }
+    },
+    [status],
+  );
+
+  const say = useCallback(
+    (text: string) => {
+      if (vapiRef.current && status === "active" && typeof vapiRef.current.say === "function") {
+        try {
+          vapiRef.current.say(text);
+        } catch (e) {
+          console.warn("[Vapi] Say error:", e);
+        }
+      }
+    },
+    [status],
+  );
+
   useEffect(() => {
     return () => {
       if (vapiRef.current) {
@@ -185,5 +229,7 @@ export function useVapi() {
     stopCall,
     toggleMute,
     clearTranscript,
+    send,
+    say,
   };
 }

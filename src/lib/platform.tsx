@@ -507,8 +507,30 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const isAuthenticated = Boolean(
       data.currentAccountId && data.accounts.some((a) => a.id === data.currentAccountId),
     );
-    const currentAccount =
-      data.accounts.find((a) => a.id === data.currentAccountId) ?? data.accounts[0]!;
+    const currentAccount: Account =
+      data.accounts.find((a) => a.id === data.currentAccountId) ??
+      data.accounts[0] ?? {
+        id: "org_default",
+        slug: "default",
+        businessName: "PlumbFlow Trade",
+        ownerName: "User",
+        email: "user@rchplumbflow.co.uk",
+        phone: "01632 960019",
+        town: "",
+        postcode: "",
+        signupDate: new Date().toISOString(),
+        subscriptionStatus: "trialing",
+        trialEndsAt: null,
+        lastActiveAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        customersCount: 0,
+        jobsCompleted: 0,
+        quotesSent: 0,
+        quotesAccepted: 0,
+        invoicedTotal: 0,
+        collectedTotal: 0,
+        setup: setup(0),
+      };
 
     return {
       data,
@@ -600,13 +622,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           return { success: false, error: "EMAIL_NOT_FOUND" };
         }
 
-        const validPass = match.password;
-        if (
-          password !== undefined &&
-          password !== "" &&
-          validPass &&
-          password !== validPass
-        ) {
+        if (!password || password !== match.password) {
           return { success: false, account: match, error: "WRONG_PASSWORD" };
         }
 
@@ -623,7 +639,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       },
       loginWithOAuth: ({ email, name, provider, avatarUrl }) => {
         const cleanEmail = email.trim().toLowerCase();
-        let matched = data.accounts.find((a) => a.email.toLowerCase() === cleanEmail);
+        const matched = data.accounts.find((a) => a.email.toLowerCase() === cleanEmail);
 
         if (matched) {
           update((draft) => {

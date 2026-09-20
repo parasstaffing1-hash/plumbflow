@@ -84,10 +84,13 @@ const SECTIONS = [
       "Customers describe the problem, add a photo and say how soon they need you. It lands in Enquiries with a New chip, and anything marked as an emergency goes straight to the top of Today.",
     ],
     screen: <ScreenEnquiries />,
-    link: { to: "/book/$orgSlug", params: { orgSlug: "rch-drainage" }, label: "See an example booking page" },
+    link: {
+      to: "/book/$orgSlug",
+      params: { orgSlug: "rch-drainage" },
+      label: "See an example booking page",
+    },
   },
 ];
-
 
 function FeaturesPage() {
   return (

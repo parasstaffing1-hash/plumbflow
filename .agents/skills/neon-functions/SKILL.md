@@ -451,10 +451,9 @@ async function poll() {
   if (polling || clients.size === 0) return; // guard overlap; no clients → no query → compute can scale to zero
   polling = true;
   try {
-    const { rows } = await pool.query(
-      "SELECT id, payload FROM events WHERE id > $1 ORDER BY id",
-      [lastId],
-    );
+    const { rows } = await pool.query("SELECT id, payload FROM events WHERE id > $1 ORDER BY id", [
+      lastId,
+    ]);
     for (const { id, payload } of rows) {
       lastId = id;
       for (const socket of clients) {
@@ -513,10 +512,7 @@ listener.on("notification", (msg) => {
 
 // Broadcast by NOTIFYing through the pool — every isolate's listener fires.
 function broadcast(event: unknown) {
-  return pool.query("SELECT pg_notify($1, $2)", [
-    CHANNEL,
-    JSON.stringify(event),
-  ]);
+  return pool.query("SELECT pg_notify($1, $2)", [CHANNEL, JSON.stringify(event)]);
 }
 ```
 
@@ -544,8 +540,7 @@ async function connect() {
     /* apply the event */
   };
   ws.onclose = () => {
-    if (!closed)
-      timer = setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000));
+    if (!closed) timer = setTimeout(connect, Math.min(1000 * 2 ** retry++, 15000));
   };
   ws.onerror = () => ws.close(); // let onclose drive the retry
 }
@@ -568,10 +563,7 @@ export default {
       new ReadableStream<Uint8Array>({
         start(controller) {
           controller.enqueue(encoder.encode("data: hello\n\n"));
-          t = setInterval(
-            () => controller.enqueue(encoder.encode(": ping\n\n")),
-            25_000,
-          );
+          t = setInterval(() => controller.enqueue(encoder.encode(": ping\n\n")), 25_000);
         },
         cancel() {
           clearInterval(t); // fires when the client disconnects

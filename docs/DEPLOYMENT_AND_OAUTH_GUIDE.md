@@ -9,7 +9,9 @@ This document is your exact step-by-step roadmap when your client provides the c
 PlumbFlow builds natively with Nitro (`cloudflare-module` preset) and Vite into a high-performance edge deployment.
 
 ### Option A: Cloudflare Pages / Workers (Recommended)
+
 Because Cloudflare already hosts your R2 bucket (`plumbflow`), hosting on Cloudflare delivers lowest latency:
+
 1. Run the production build:
    ```powershell
    npm run build
@@ -24,6 +26,7 @@ Because Cloudflare already hosts your R2 bucket (`plumbflow`), hosting on Cloudf
    - Cloudflare automatically provisions edge SSL/TLS certificates with zero configuration.
 
 ### Option B: Vercel
+
 1. Install Vercel CLI: `npm i -g vercel`
 2. Run `vercel` and follow prompts.
 3. Attach domain under **Project Settings** -> **Domains**.
@@ -35,18 +38,21 @@ Because Cloudflare already hosts your R2 bucket (`plumbflow`), hosting on Cloudf
 OAuth providers (Google, GitHub, Microsoft) require a real, verified public domain for redirect URIs.
 
 ### Google OAuth Setup (Google Cloud Console)
+
 1. Go to [Google Cloud Console Credentials](https://console.cloud.google.com/apis/credentials).
-2. Create an **OAuth 2.0 Client ID** (Application type: *Web application*).
+2. Create an **OAuth 2.0 Client ID** (Application type: _Web application_).
 3. Under **Authorized JavaScript origins**, add:
    - `https://yourdomain.co.uk`
    - `https://www.yourdomain.co.uk`
 4. Under **Authorized redirect URIs**, add:
    - `https://yourdomain.co.uk/api/auth/callback/google`
-   - *(And for local testing: `http://localhost:8080/api/auth/callback/google`)*
+   - _(And for local testing: `http://localhost:8080/api/auth/callback/google`)_
 5. Copy the **Client ID** and **Client Secret** into your production environment variables.
 
 ### Neon Auth (Managed Better Auth) OAuth
+
 If using Neon Auth (`auth: true` in `neon.ts`):
+
 1. In the Neon Console or via CLI:
    ```powershell
    neon neon-auth oauth-provider add google --client-id <CLIENT_ID> --client-secret <CLIENT_SECRET>
@@ -59,6 +65,7 @@ If using Neon Auth (`auth: true` in `neon.ts`):
 ## Step 3: Verify the Custom Domain in Resend
 
 To send emails from `hello@yourdomain.co.uk` instead of the sandbox address (`onboarding@resend.dev`):
+
 1. Go to [resend.com/domains](https://resend.com/domains) and click **Add Domain**.
 2. Enter the client's domain (e.g. `yourdomain.co.uk` or `mail.yourdomain.co.uk`).
 3. Resend will provide 3 DNS records:
@@ -76,6 +83,7 @@ To send emails from `hello@yourdomain.co.uk` instead of the sandbox address (`on
 ## Step 4: Link Neon Database & Apply Schema
 
 Once you have your client's database credentials or Neon API key:
+
 1. Link project:
    ```powershell
    neon link --project-id silent-frost-77535595 --branch production -y

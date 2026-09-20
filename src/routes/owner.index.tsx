@@ -1,5 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { usePlatform, daysUntil, SUBSCRIPTION_LABELS, type SubscriptionStatus } from "@/lib/platform";
+import {
+  usePlatform,
+  daysUntil,
+  SUBSCRIPTION_LABELS,
+  type SubscriptionStatus,
+} from "@/lib/platform";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/owner/")({

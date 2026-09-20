@@ -53,7 +53,6 @@ function Today() {
   const [emergencyIndex, setEmergencyIndex] = useState(0);
   const jobsTrack = useRef<HTMLDivElement | null>(null);
 
-
   const visibleJobs = can.seeAllJobs
     ? data.jobs
     : data.jobs.filter((job) => job.assignedToId === currentUser.id);
@@ -65,11 +64,13 @@ function Today() {
   const emergencyJobIds = new Set(emergencyJobs.map((job) => job.id));
   const listJobs = todaysJobs.filter((job) => !emergencyJobIds.has(job.id));
   const emergencyEnquiries = data.enquiries.filter(
-    (enquiry) => enquiry.isEmergency && enquiry.status !== "declined" && enquiry.status !== "converted",
+    (enquiry) =>
+      enquiry.isEmergency && enquiry.status !== "declined" && enquiry.status !== "converted",
   );
   const emergencyCount = emergencyJobs.length + emergencyEnquiries.length;
-  const newEnquiries = data.enquiries.filter((e) => e.status === "new" || e.status === "needs_contact");
-
+  const newEnquiries = data.enquiries.filter(
+    (e) => e.status === "new" || e.status === "needs_contact",
+  );
 
   const openInvoices = data.invoices.filter(
     (invoice) => !["paid", "written_off", "credited", "draft"].includes(invoice.status),
@@ -105,9 +106,6 @@ function Today() {
     const row = jobsTrack.current?.querySelector(`[data-job-id="${nextJobId}"]`);
     row?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [nextJobId]);
-
-
-
 
   /** One tap: draft a quote pre-filled with the minimum call-out charge. */
   function callOutQuote(input: {
@@ -174,8 +172,8 @@ function Today() {
         <p className="label-caps text-fog">{formatDayLabel(new Date())}</p>
         <h1 className="mt-1 text-2xl font-semibold">Today</h1>
         <p className="mt-1 text-base text-fog">
-          {todaysJobs.length} {todaysJobs.length === 1 ? "job" : "jobs"} booked · {newEnquiries.length}{" "}
-          {newEnquiries.length === 1 ? "enquiry" : "enquiries"} to action
+          {todaysJobs.length} {todaysJobs.length === 1 ? "job" : "jobs"} booked ·{" "}
+          {newEnquiries.length} {newEnquiries.length === 1 ? "enquiry" : "enquiries"} to action
         </p>
       </header>
 
@@ -254,7 +252,11 @@ function Today() {
                   }
                   onSchedule={() => {
                     setEnquiry(enquiry.id, { status: "converted" });
-                    log("enquiry", enquiry.id, `Job booked for today, ${formatDayLabel(new Date())}`);
+                    log(
+                      "enquiry",
+                      enquiry.id,
+                      `Job booked for today, ${formatDayLabel(new Date())}`,
+                    );
                     navigate({ to: "/app/enquiries" });
                   }}
                   onDecline={() => declineWithReason(enquiry.id)}
@@ -279,10 +281,6 @@ function Today() {
           ) : null}
         </div>
       ) : null}
-
-
-
-
 
       <main className="space-y-6 px-4 py-5">
         <section className="grid grid-cols-2 gap-3">
@@ -339,8 +337,7 @@ function Today() {
                     <JobRow
                       job={job}
                       isLate={
-                        job.status !== "complete" &&
-                        new Date(job.scheduledStart).getTime() < nowMs
+                        job.status !== "complete" && new Date(job.scheduledStart).getTime() < nowMs
                       }
                     />
                   </div>
@@ -359,7 +356,6 @@ function Today() {
             </>
           )}
         </section>
-
 
         <section>
           <div className="mb-3 flex items-center justify-between">
@@ -392,7 +388,6 @@ function Today() {
             </Link>
           ) : null}
         </section>
-
 
         {can.seeMoney ? (
           <section className="rounded-2xl border border-line bg-paper p-4">

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useForm, ValidationError } from "@formspree/react";
 import { MarketingPage, Section } from "@/components/marketing/Site";
@@ -27,6 +27,10 @@ function ContactPage() {
   const { data, submitContact } = usePlatform();
   const [state, handleSubmit] = useForm("xzezznba");
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const formRef = useRef(form);
+  formRef.current = form;
+  const submitContactRef = useRef(submitContact);
+  submitContactRef.current = submitContact;
 
   function field(key: keyof typeof form) {
     return {
@@ -39,11 +43,11 @@ function ContactPage() {
   useEffect(() => {
     if (state.succeeded) {
       toast.success("Message sent! We'll get back to you shortly.");
-      submitContact({
-        name: form.name.trim().slice(0, 120),
-        email: form.email.trim().slice(0, 255),
-        phone: form.phone.trim().slice(0, 40),
-        message: form.message.trim().slice(0, 2000),
+      submitContactRef.current({
+        name: formRef.current.name.trim().slice(0, 120),
+        email: formRef.current.email.trim().slice(0, 255),
+        phone: formRef.current.phone.trim().slice(0, 40),
+        message: formRef.current.message.trim().slice(0, 2000),
       });
     }
   }, [state.succeeded]);

@@ -1,7 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { usePlatform, setupSteps, SUBSCRIPTION_LABELS, type SubscriptionStatus } from "@/lib/platform";
+import {
+  usePlatform,
+  setupSteps,
+  SUBSCRIPTION_LABELS,
+  type SubscriptionStatus,
+} from "@/lib/platform";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { ReasonDialog, StatusPill } from "./owner.accounts.index";
 

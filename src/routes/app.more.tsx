@@ -47,8 +47,11 @@ export const Route = createFileRoute("/app/more")({
 
 function More() {
   const { data, update, currentUser } = useStore();
-  const { data: platform, logout } = usePlatform();
+  const { data: platform, currentAccount, logout } = usePlatform();
   const navigate = useNavigate();
+
+  const displayName = currentAccount?.ownerName || currentUser.name;
+  const businessName = currentAccount?.businessName || data.org.tradingName;
 
   return (
     <div>
@@ -84,8 +87,12 @@ function More() {
 
         <section className="rounded-2xl border border-line bg-paper p-4">
           <h2 className="label-caps">Signed in as</h2>
-          <p className="mt-2 text-lg font-semibold text-ink">{currentUser.name}</p>
-          <p className="text-base text-fog">{ROLE_LABELS[currentUser.role]}</p>
+          <p className="mt-2 text-lg font-semibold text-ink">{displayName}</p>
+          <p className="text-sm font-medium text-amber-deep">{businessName}</p>
+          {currentAccount?.email ? (
+            <p className="mt-0.5 text-xs text-slate">{currentAccount.email}</p>
+          ) : null}
+          <p className="mt-1 text-xs text-fog">{ROLE_LABELS[currentUser.role]}</p>
           <label htmlFor="role-switch" className="label-caps mt-4 block">
             Preview another role
           </label>

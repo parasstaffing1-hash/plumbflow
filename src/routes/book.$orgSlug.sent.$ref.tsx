@@ -31,7 +31,8 @@ function SentPage() {
   const { tenant } = useTenant();
   const { data } = useStore();
   const { account } = tenant;
-  const firstName = account.ownerName.split(" ")[0];
+  const firstName =
+    account.ownerName?.trim().split(" ")[0] || account.businessName || "Your plumber";
 
   const enquiry = data.enquiries.find((row) => row.reference === ref);
   const photosDropped = enquiriesWithDroppedPhotos.has(ref);
@@ -51,8 +52,8 @@ function SentPage() {
         </h1>
 
         <p className="mt-4 text-lg text-slate">
-          Your reference is{" "}
-          <span className="tabular font-bold text-ink">{ref}</span>. Quote it if you call.
+          Your reference is <span className="tabular font-bold text-ink">{ref}</span>. Quote it if
+          you call.
         </p>
 
         <div className="mt-6 rounded-2xl border border-line bg-paper p-4">

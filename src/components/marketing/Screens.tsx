@@ -175,7 +175,9 @@ export function ScreenJob() {
                 key={label as string}
                 className={cn(
                   "rounded border p-1.5 text-center text-[9px] font-semibold",
-                  done ? "border-go/30 bg-go-wash text-go" : "border-amber bg-amber-wash text-amber-deep",
+                  done
+                    ? "border-go/30 bg-go-wash text-go"
+                    : "border-amber bg-amber-wash text-amber-deep",
                 )}
               >
                 {label as string}

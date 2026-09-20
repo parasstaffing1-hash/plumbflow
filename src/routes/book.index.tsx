@@ -40,8 +40,8 @@ function BookingIndex() {
         <div className="mx-auto max-w-4xl">
           <h1 className="text-3xl font-bold tracking-tight">Booking pages</h1>
           <p className="mt-3 text-lg text-fog">
-            These are the customer facing pages, one per business on the platform. A homeowner
-            uses them to report a problem and the enquiry lands in that plumber&rsquo;s app.
+            These are the customer facing pages, one per business on the platform. A homeowner uses
+            them to report a problem and the enquiry lands in that plumber&rsquo;s app.
           </p>
         </div>
       </header>

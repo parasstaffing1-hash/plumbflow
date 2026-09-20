@@ -53,14 +53,17 @@ child.on("close", async (code) => {
   if (code === 0) {
     console.log("\n✅ Upload succeeded! Verifying workers.dev route...");
     try {
-      await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/plumbflow/subdomain`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/scripts/plumbflow/subdomain`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ enabled: true }),
         },
-        body: JSON.stringify({ enabled: true }),
-      });
+      );
       console.log("🌐 Production Custom Domain: https://rchplumbflow.co.uk");
       console.log("🌐 Production WWW Domain:    https://www.rchplumbflow.co.uk");
       console.log("🌐 Edge Worker Fallback:      https://plumbflow.voicefield.workers.dev\n");

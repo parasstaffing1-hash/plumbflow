@@ -12,41 +12,11 @@ export interface OAuthProfile {
   provider: "google" | "apple";
 }
 
-export const DEMO_OAUTH_PROFILES: OAuthProfile[] = [
-  {
-    id: "g_ray",
-    name: "Ray Hardwick",
-    email: "ray@rchdrainage.co.uk",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-    provider: "google",
-  },
-  {
-    id: "g_dean",
-    name: "Dean Fletcher",
-    email: "dean@fletcherplumbing.co.uk",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-    provider: "google",
-  },
-  {
-    id: "a_ray",
-    name: "Ray Hardwick (Apple ID)",
-    email: "ray.hardwick@icloud.com",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-    provider: "apple",
-  },
-  {
-    id: "a_marcus",
-    name: "Marcus Reilly (Apple ID)",
-    email: "marcus.reilly@icloud.com",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-    provider: "apple",
-  },
-];
-
 export function getGoogleClientId(): string {
   if (typeof window === "undefined") return "";
   return (
-    (import.meta as unknown as { env?: Record<string, string> }).env?.["VITE_GOOGLE_CLIENT_ID"] || ""
+    (import.meta as unknown as { env?: Record<string, string> }).env?.["VITE_GOOGLE_CLIENT_ID"] ||
+    ""
   );
 }
 

@@ -208,9 +208,7 @@ function PriceBook() {
                           onClick={() => {
                             setPriceItem(item.id, { isArchived: !item.isArchived });
                             toast.success(
-                              item.isArchived
-                                ? `${item.code} restored`
-                                : `${item.code} archived`,
+                              item.isArchived ? `${item.code} restored` : `${item.code} archived`,
                             );
                           }}
                           className="tap flex items-center rounded-lg px-2 text-[15px] font-semibold text-amber-deep"

@@ -47,7 +47,10 @@ function OwnerSettings() {
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-line bg-paper p-5 shadow-card">
+      <form
+        onSubmit={onSubmit}
+        className="space-y-4 rounded-xl border border-line bg-paper p-5 shadow-card"
+      >
         <label className="block">
           <span className="label-caps text-slate">Monthly price (£ per plumber)</span>
           <input

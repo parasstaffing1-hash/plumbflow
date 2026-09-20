@@ -45,7 +45,10 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link to="/login" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-fog hover:text-paper">
+          <Link
+            to="/login"
+            className="inline-flex min-h-11 items-center text-[15px] font-semibold text-fog hover:text-paper"
+          >
             Log in
           </Link>
           <Link
@@ -116,18 +119,27 @@ export function SiteFooter() {
           <ul className="mt-3 space-y-2 text-[15px]">
             {NAV.map((item) => (
               <li key={item.to}>
-                <Link to={item.to} className="inline-flex min-h-11 min-w-11 items-center hover:text-paper">
+                <Link
+                  to={item.to}
+                  className="inline-flex min-h-11 min-w-11 items-center hover:text-paper"
+                >
                   {item.label}
                 </Link>
               </li>
             ))}
             <li>
-              <Link to="/signup" className="inline-flex min-h-11 min-w-11 items-center hover:text-paper">
+              <Link
+                to="/signup"
+                className="inline-flex min-h-11 min-w-11 items-center hover:text-paper"
+              >
                 Start free trial
               </Link>
             </li>
             <li>
-              <Link to="/login" className="inline-flex min-h-11 min-w-11 items-center hover:text-paper">
+              <Link
+                to="/login"
+                className="inline-flex min-h-11 min-w-11 items-center hover:text-paper"
+              >
                 Log in
               </Link>
             </li>
@@ -138,12 +150,18 @@ export function SiteFooter() {
           <h2 className="label-caps text-paper">Get in touch</h2>
           <ul className="mt-3 space-y-2 text-[15px]">
             <li>
-              <a href={`mailto:${contactEmail}`} className="inline-flex min-h-11 min-w-11 items-center hover:text-paper">
+              <a
+                href={`mailto:${contactEmail}`}
+                className="inline-flex min-h-11 min-w-11 items-center hover:text-paper"
+              >
                 {contactEmail}
               </a>
             </li>
             <li>
-              <a href={`tel:${contactPhone.replace(/\s/g, "")}`} className="inline-flex min-h-11 min-w-11 items-center hover:text-paper">
+              <a
+                href={`tel:${contactPhone.replace(/\s/g, "")}`}
+                className="inline-flex min-h-11 min-w-11 items-center hover:text-paper"
+              >
                 {contactPhone}
               </a>
             </li>

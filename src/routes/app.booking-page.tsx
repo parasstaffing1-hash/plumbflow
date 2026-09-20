@@ -4,6 +4,7 @@ import { Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { useStore } from "@/lib/store";
+import { usePlatform } from "@/lib/platform";
 
 export const Route = createFileRoute("/app/booking-page")({
   head: () => ({
@@ -35,7 +36,9 @@ function slugify(value: string): string {
 
 function BookingPageSettings() {
   const { data } = useStore();
-  const slug = slugify(data.org.tradingName);
+  const { currentAccount } = usePlatform();
+  const slug =
+    currentAccount?.slug || slugify(currentAccount?.businessName || data.org.tradingName);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
@@ -57,7 +60,10 @@ function BookingPageSettings() {
 
   return (
     <div>
-      <PageHeader title="Your booking page" subtitle="Send it to customers or put it on your site" />
+      <PageHeader
+        title="Your booking page"
+        subtitle="Send it to customers or put it on your site"
+      />
       <main className="space-y-5 px-4 py-5">
         <section className="rounded-2xl border border-line bg-paper p-4">
           <h2 className="label-caps">Your link</h2>
@@ -80,8 +86,8 @@ function BookingPageSettings() {
             </button>
           </div>
           <p className="mt-2 text-[15px] text-fog">
-            Print it on the van, put it on your invoices, text it to a customer who rings while
-            you are under a sink.
+            Print it on the van, put it on your invoices, text it to a customer who rings while you
+            are under a sink.
           </p>
         </section>
 

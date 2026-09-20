@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, FileText, Printer } from "lucide-react";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { usePlatform } from "@/lib/platform";
 import { STAGE_LABELS, type EvidenceStage } from "@/lib/domain";
 
 const ORDER: EvidenceStage[] = ["before", "during", "testing", "after"];
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/app/jobs/$jobId/pack")({
 function Pack() {
   const { jobId } = Route.useParams();
   const { data, customer, property, jobType, variationsFor } = useStore();
+  const { currentAccount } = usePlatform();
   const job = data.jobs.find((row) => row.id === jobId);
 
   if (!job) {
@@ -46,6 +48,10 @@ function Pack() {
   const variations = variationsFor(job.id).filter((v) => v.status === "approved");
   const invoice = data.invoices.find((row) => row.jobId === job.id);
   const org = data.org;
+  const businessName = currentAccount?.businessName || org.tradingName;
+  const phone = currentAccount?.phone || org.phone;
+  const email = currentAccount?.email || org.email;
+  const town = currentAccount?.town || org.town;
 
   return (
     <div>
@@ -69,10 +75,10 @@ function Pack() {
 
       <main className="space-y-4 px-4 py-5">
         <Block title="Prepared by">
-          <Row label="Business" value={org.tradingName} />
-          <Row label="Phone" value={org.phone} />
-          <Row label="Email" value={org.email} />
-          <Row label="Area" value={org.town} />
+          <Row label="Business" value={businessName} />
+          <Row label="Phone" value={phone} />
+          <Row label="Email" value={email} />
+          <Row label="Area" value={town} />
           {org.vatRate > 0 ? (
             <Row label="VAT" value={`Registered, ${Math.round(org.vatRate * 100)}%`} />
           ) : null}
@@ -103,31 +109,33 @@ function Pack() {
         </Block>
 
         <Block title="5. Test results">
-          <p className="text-base text-slate">{job.testResults || "Not required for this job type."}</p>
+          <p className="text-base text-slate">
+            {job.testResults || "Not required for this job type."}
+          </p>
         </Block>
 
         {job.photos.length > 0 ? (
-        <Block title="6. Photo evidence">
-          {ORDER.map((stage) => {
-            const photos = job.photos.filter((photo) => photo.stage === stage);
-            if (photos.length === 0) return null;
-            return (
-              <div key={stage} className="mt-2 first:mt-0">
-                <p className="label-caps">{STAGE_LABELS[stage]}</p>
-                <ul className="mt-1 space-y-1">
-                  {photos.map((photo) => (
-                    <li key={photo.id} className="text-base text-slate">
-                      {photo.label}{" "}
-                      <span className="tabular text-[15px] text-fog">
-                        {formatDateTime(photo.capturedAt)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </Block>
+          <Block title="6. Photo evidence">
+            {ORDER.map((stage) => {
+              const photos = job.photos.filter((photo) => photo.stage === stage);
+              if (photos.length === 0) return null;
+              return (
+                <div key={stage} className="mt-2 first:mt-0">
+                  <p className="label-caps">{STAGE_LABELS[stage]}</p>
+                  <ul className="mt-1 space-y-1">
+                    {photos.map((photo) => (
+                      <li key={photo.id} className="text-base text-slate">
+                        {photo.label}{" "}
+                        <span className="tabular text-[15px] text-fog">
+                          {formatDateTime(photo.capturedAt)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </Block>
         ) : null}
 
         <Block title="7. Variations">

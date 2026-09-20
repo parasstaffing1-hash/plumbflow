@@ -46,8 +46,7 @@ Sentry.init({
   ],
   release: process.env.SENTRY_RELEASE,
   environment:
-    process.env.NEON_BRANCH &&
-    process.env.NEON_BRANCH !== process.env.PRODUCTION_BRANCH
+    process.env.NEON_BRANCH && process.env.NEON_BRANCH !== process.env.PRODUCTION_BRANCH
       ? process.env.NEON_BRANCH
       : "production",
 });

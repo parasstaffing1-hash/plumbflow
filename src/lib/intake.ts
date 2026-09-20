@@ -39,9 +39,7 @@ export const MAX_HOMEOWNER_VIDEOS = 2;
 export const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 export interface IntakeStore {
-  addEnquiry: (
-    input: Omit<Enquiry, "id" | "orgId" | "reference" | "receivedAt">,
-  ) => Enquiry;
+  addEnquiry: (input: Omit<Enquiry, "id" | "orgId" | "reference" | "receivedAt">) => Enquiry;
   log: (entityType: "enquiry", entityId: string, message: string) => void;
 }
 

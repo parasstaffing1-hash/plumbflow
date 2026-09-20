@@ -106,9 +106,15 @@ const DIFFERENT = [
 ];
 
 const FAQ_PREVIEW = [
-  { q: "Do I need to install anything?", a: "No. It runs in your phone browser and adds to the home screen." },
+  {
+    q: "Do I need to install anything?",
+    a: "No. It runs in your phone browser and adds to the home screen.",
+  },
   { q: "Can I use my own prices?", a: "Yes, always. Your price book, your rates." },
-  { q: "Does it work with no signal?", a: "Active jobs stay readable and changes sync when you reconnect." },
+  {
+    q: "Does it work with no signal?",
+    a: "Active jobs stay readable and changes sync when you reconnect.",
+  },
   { q: "Is there a contract?", a: "No. £69 a month, cancel whenever you like." },
 ];
 
@@ -135,8 +141,8 @@ function HomePage() {
               From first enquiry to paid invoice. Without the paperwork.
             </h1>
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-fog">
-              RCH PlumbFlow runs the admin side of a plumbing business from your phone, so your evenings
-              are yours again.
+              RCH PlumbFlow runs the admin side of a plumbing business from your phone, so your
+              evenings are yours again.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <PrimaryCta />
@@ -197,7 +203,9 @@ function HomePage() {
       {/* Journey */}
       <Section tone="surface" className="scroll-mt-16">
         <div id="how-it-works" className="scroll-mt-20">
-          <h2 className="text-3xl font-semibold tracking-tight">Nine steps. You do four of them.</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">
+            Nine steps. You do four of them.
+          </h2>
           <p className="mt-3 max-w-2xl text-lg text-slate">
             This is the whole job, start to finish, and exactly what is left for you.
           </p>
@@ -266,7 +274,10 @@ function HomePage() {
           </div>
           <div className="flex flex-col gap-3">
             <PrimaryCta />
-            <Link to="/pricing" className="inline-flex min-h-11 items-center justify-center text-center text-[15px] font-semibold text-fog">
+            <Link
+              to="/pricing"
+              className="inline-flex min-h-11 items-center justify-center text-center text-[15px] font-semibold text-fog"
+            >
               See what&rsquo;s included
             </Link>
           </div>
@@ -284,10 +295,7 @@ function HomePage() {
             </div>
           ))}
         </dl>
-        <Link
-          to="/faq"
-          className="tap mt-6 inline-block text-lg font-semibold text-amber-deep"
-        >
+        <Link to="/faq" className="tap mt-6 inline-block text-lg font-semibold text-amber-deep">
           All questions →
         </Link>
       </Section>

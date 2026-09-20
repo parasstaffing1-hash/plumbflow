@@ -63,12 +63,8 @@ export function ListScreen<T>({
 }: ListScreenProps<T>) {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounced(query, 200);
-  const [sortId, setSortId] = useState(
-    () => sortMemory.get(listId) ?? sortOptions[0]?.id ?? "",
-  );
-  const [filterId, setFilterId] = useState(
-    () => initialFilterId ?? filterMemory.get(listId) ?? "",
-  );
+  const [sortId, setSortId] = useState(() => sortMemory.get(listId) ?? sortOptions[0]?.id ?? "");
+  const [filterId, setFilterId] = useState(() => initialFilterId ?? filterMemory.get(listId) ?? "");
   const [sortOpen, setSortOpen] = useState(false);
   const [visible, setVisible] = useState(20);
   const [refreshing, setRefreshing] = useState(false);
@@ -206,7 +202,6 @@ export function ListScreen<T>({
           Sort
         </button>
       </div>
-
 
       <main className="px-4 py-4">
         {refreshing || pullDistance > 0 ? (

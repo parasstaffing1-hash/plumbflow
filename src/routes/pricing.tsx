@@ -74,8 +74,8 @@ function PricingPage() {
             One plan. £{monthlyPrice} a month.
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-fog">
-            Per plumber, VAT where applicable. Everything is included, there is no bigger version
-            of RCH PlumbFlow to upgrade to.
+            Per plumber, VAT where applicable. Everything is included, there is no bigger version of
+            RCH PlumbFlow to upgrade to.
           </p>
 
           <div className="mt-10 max-w-md rounded-2xl border border-ink-soft bg-ink-soft p-6">
@@ -131,7 +131,10 @@ function PricingPage() {
         </dl>
         <p className="mt-8 text-[16px] text-slate">
           Something else on your mind?{" "}
-          <Link to="/contact" className="inline-flex min-h-11 items-center align-middle font-semibold text-amber-deep">
+          <Link
+            to="/contact"
+            className="inline-flex min-h-11 items-center align-middle font-semibold text-amber-deep"
+          >
             Ask us directly
           </Link>
           .

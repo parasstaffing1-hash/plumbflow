@@ -46,7 +46,10 @@ function CustomerDetail() {
   return (
     <div>
       <header className="bg-ink px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-5 text-paper">
-        <Link to="/app/customers" className="tap -ml-2 inline-flex items-center gap-1 text-base text-fog">
+        <Link
+          to="/app/customers"
+          className="tap -ml-2 inline-flex items-center gap-1 text-base text-fog"
+        >
           <ArrowLeft className="size-5" aria-hidden />
           Customers
         </Link>

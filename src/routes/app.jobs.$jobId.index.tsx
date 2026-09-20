@@ -49,8 +49,18 @@ function JobDetail() {
   const { jobId } = Route.useParams();
   const navigate = useNavigate();
   const store = useStore();
-  const { data, can, setJob, log, addVariation, update, customer, property, jobType, variationsFor } =
-    store;
+  const {
+    data,
+    can,
+    setJob,
+    log,
+    addVariation,
+    update,
+    customer,
+    property,
+    jobType,
+    variationsFor,
+  } = store;
 
   const job = data.jobs.find((row) => row.id === jobId);
   const [showGate, setShowGate] = useState(false);
@@ -198,7 +208,10 @@ function JobDetail() {
   return (
     <div className="pb-8">
       <header className="sticky top-0 z-30 bg-ink px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-4 text-paper">
-        <Link to="/app/jobs" className="tap -ml-2 inline-flex items-center gap-1 text-base text-fog">
+        <Link
+          to="/app/jobs"
+          className="tap -ml-2 inline-flex items-center gap-1 text-base text-fog"
+        >
           <ArrowLeft className="size-5" aria-hidden />
           Jobs
         </Link>
@@ -410,7 +423,9 @@ function JobDetail() {
                       onClick={() => {
                         const note = window.prompt("How was this approved by the customer?");
                         if (!note || note.trim().length < MIN_REASON_LENGTH) {
-                          toast.error(`Record how it was approved (min ${MIN_REASON_LENGTH} characters).`);
+                          toast.error(
+                            `Record how it was approved (min ${MIN_REASON_LENGTH} characters).`,
+                          );
                           return;
                         }
                         update((draft) => {

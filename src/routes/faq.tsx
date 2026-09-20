@@ -69,7 +69,6 @@ export const Route = createFileRoute("/faq")({
   component: FaqPage,
 });
 
-
 function FaqPage() {
   const { data } = usePlatform();
 

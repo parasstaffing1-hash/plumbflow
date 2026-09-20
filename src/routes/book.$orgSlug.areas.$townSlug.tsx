@@ -45,7 +45,10 @@ function AreaPage() {
             : "sticky top-[64px] z-30 bg-amber px-4 py-2 text-center text-base font-bold text-ink"
         }
       >
-        Water pouring in? <a href={telHref(account.phone)} className="underline">Call now</a>
+        Water pouring in?{" "}
+        <a href={telHref(account.phone)} className="underline">
+          Call now
+        </a>
       </div>
 
       <section className="bg-ink px-4 pt-6 pb-8 text-paper">

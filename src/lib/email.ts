@@ -35,4 +35,3 @@ export const triggerWelcomeEmail = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<EmailResult> => {
     return await sendWelcomeEmail(data);
   });
-

@@ -24,7 +24,13 @@ export function ReportForm({
   onSent,
 }: {
   tenant: Tenant;
-  initial?: { problem?: string; postcode?: string; phone?: string; town?: string; service?: string };
+  initial?: {
+    problem?: string;
+    postcode?: string;
+    phone?: string;
+    town?: string;
+    service?: string;
+  };
   onEmergencyChange?: (next: boolean) => void;
   onSent: (reference: string) => void;
 }) {
@@ -221,7 +227,9 @@ export function ReportForm({
             onClick={() => chooseEmergency(false)}
             className={cn(
               "min-h-14 rounded-xl border-2 px-4 text-base font-bold",
-              emergency === false ? "border-ink bg-ink text-paper" : "border-line bg-paper text-ink",
+              emergency === false
+                ? "border-ink bg-ink text-paper"
+                : "border-line bg-paper text-ink",
             )}
           >
             It can wait
@@ -450,7 +458,9 @@ export function ReportForm({
               onClick={() => setTiming(option)}
               className={cn(
                 "min-h-12 rounded-full border px-5 text-base font-semibold",
-                timing === option ? "border-amber bg-amber text-ink" : "border-line bg-paper text-ink",
+                timing === option
+                  ? "border-amber bg-amber text-ink"
+                  : "border-line bg-paper text-ink",
               )}
             >
               {option}

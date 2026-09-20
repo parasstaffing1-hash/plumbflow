@@ -38,11 +38,13 @@ function EmbeddedForm() {
   }
 
   if (sentRef) {
+    const firstName =
+      tenant.account.ownerName?.trim().split(" ")[0] || tenant.account.businessName || "Your plumber";
     return (
       <div className="bg-surface p-5">
         <p className="text-xl font-bold text-ink">Got it. Your reference is {sentRef}.</p>
         <p className="mt-2 text-lg text-slate">
-          {tenant.account.ownerName.split(" ")[0]} will call you back on the number you gave.
+          {firstName} will call you back on the number you gave.
         </p>
       </div>
     );

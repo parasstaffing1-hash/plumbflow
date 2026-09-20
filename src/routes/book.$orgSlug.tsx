@@ -63,7 +63,10 @@ function TenantLayout() {
           <div className="mx-auto max-w-3xl space-y-2 text-base text-slate">
             <p className="text-lg font-bold text-ink">{account.businessName}</p>
             <p>
-              <a href={telHref(account.phone)} className="tap inline-flex items-center font-semibold text-ink">
+              <a
+                href={telHref(account.phone)}
+                className="tap inline-flex items-center font-semibold text-ink"
+              >
                 {account.phone}
               </a>
             </p>
@@ -76,9 +79,7 @@ function TenantLayout() {
             <p>Covering {profile.serviceArea}</p>
             {profile.legalName ? <p>{profile.legalName}</p> : null}
             {profile.companyNumber ? <p>Company number {profile.companyNumber}</p> : null}
-            {profile.registeredOffice ? (
-              <p>Registered office: {profile.registeredOffice}</p>
-            ) : null}
+            {profile.registeredOffice ? <p>Registered office: {profile.registeredOffice}</p> : null}
             {profile.vatNumber ? <p>VAT number {profile.vatNumber}</p> : null}
             <p className="pt-4 text-[15px] text-fog">
               Powered by{" "}

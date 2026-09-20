@@ -81,13 +81,15 @@ function LoginPage() {
                 atob(base64)
                   .split("")
                   .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-                  .join("")
+                  .join(""),
               );
               const payload = JSON.parse(jsonPayload);
               if (payload?.email || payload?.sub) {
                 const userEmail = payload.email || `${payload.sub}@privaterelay.appleid.com`;
                 const userName =
-                  payload.name || userEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") || "Apple User";
+                  payload.name ||
+                  userEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") ||
+                  "Apple User";
                 const acc = loginWithOAuth({
                   email: userEmail,
                   name: userName,
@@ -152,22 +154,16 @@ function LoginPage() {
     }
 
     if (result.error === "WRONG_PASSWORD") {
-      toast.error("Incorrect password. Please check your credentials.");
+      toast.error("Incorrect password. Please check your credentials or reset your password.");
       return;
     }
 
-    // Provision trial account for newly entered email
-    const prefix = cleanEmail.split("@")[0] || "User";
-    const displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-    signup({
-      email: cleanEmail,
-      businessName: `${displayName}'s Plumbing`,
-      ownerName: displayName,
-      phone: "07700 900123",
-      password,
-    });
-    toast.success(`Account created for ${cleanEmail}! Welcome to PlumbFlow.`);
-    navigate({ to: redirectTarget });
+    if (result.error === "EMAIL_NOT_FOUND") {
+      toast.error("No account found with this email address. Please sign up to start your free trial.");
+      return;
+    }
+
+    toast.error("Unable to sign in. Please check your credentials.");
   }
 
   async function handleSendResetCode(e: React.FormEvent) {

@@ -44,7 +44,9 @@ export function formatDateTime(input: Date | string | number | null | undefined)
 
 export function formatDayLabel(input: Date | string | number): string {
   const date = toDate(input);
-  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(
-    date,
-  );
+  return new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }

@@ -187,7 +187,7 @@ function SignupPage() {
           form: formState,
           code,
           expiresAt: Date.now() + 15 * 60 * 1000,
-        })
+        }),
       );
     } catch {
       // Ignore storage errors
@@ -197,7 +197,9 @@ function SignupPage() {
   function clearPendingSession() {
     try {
       sessionStorage.removeItem("plumbflow_pending_signup");
-    } catch {}
+    } catch {
+      // Ignore sessionStorage errors
+    }
   }
 
   /**
@@ -231,7 +233,7 @@ function SignupPage() {
     // Development & Preview console log for easy testing
     console.info(
       `%c[PlumbFlow Security] Verification OTP for ${cleanEmail}: ${code}`,
-      "background: #0b0d0e; color: #f59e0b; font-weight: bold; font-size: 13px; padding: 4px 8px; border-radius: 4px;"
+      "background: #0b0d0e; color: #f59e0b; font-weight: bold; font-size: 13px; padding: 4px 8px; border-radius: 4px;",
     );
 
     try {
@@ -259,8 +261,14 @@ function SignupPage() {
       setSandboxNotice(code);
     } finally {
       savePendingSession(
-        { ...form, email: cleanEmail, ownerName: cleanOwner, businessName: cleanBiz, phone: cleanPhone },
-        code
+        {
+          ...form,
+          email: cleanEmail,
+          ownerName: cleanOwner,
+          businessName: cleanBiz,
+          phone: cleanPhone,
+        },
+        code,
       );
       setBusy(false);
       setStep("verify");
@@ -280,7 +288,7 @@ function SignupPage() {
 
     console.info(
       `%c[PlumbFlow Security] New OTP for ${form.email}: ${code}`,
-      "background: #0b0d0e; color: #f59e0b; font-weight: bold; font-size: 13px; padding: 4px 8px; border-radius: 4px;"
+      "background: #0b0d0e; color: #f59e0b; font-weight: bold; font-size: 13px; padding: 4px 8px; border-radius: 4px;",
     );
 
     try {
@@ -451,7 +459,8 @@ function SignupPage() {
                   <span>Email Verification Guard</span>
                 </div>
                 <p className="mt-1">
-                  We'll send a 6-digit confirmation code to confirm you own this address before launching your trial.
+                  We'll send a 6-digit confirmation code to confirm you own this address before
+                  launching your trial.
                 </p>
               </div>
 
@@ -521,9 +530,13 @@ function SignupPage() {
                   <div>
                     <span className="font-semibold text-foreground">Edge Preview Notice: </span>
                     <span className="text-slate">
-                      External email delivery is pending custom domain setup. For testing on this domain, your 6-digit verification code is{" "}
+                      External email delivery is pending custom domain setup. For testing on this
+                      domain, your 6-digit verification code is{" "}
                     </span>
-                    <strong className="font-mono text-sm text-amber-deep font-bold tracking-wider">{sandboxNotice}</strong>.
+                    <strong className="font-mono text-sm text-amber-deep font-bold tracking-wider">
+                      {sandboxNotice}
+                    </strong>
+                    .
                   </div>
                 </div>
               </div>
@@ -596,7 +609,8 @@ function SignupPage() {
         <div className="mt-10 border-t border-line pt-6 text-base text-slate">
           <Wordmark tone="ink" />
           <p className="mt-2 text-sm">
-            £{data.settings.monthlyPrice} a month after the trial. Cancel anytime, your data is retained.
+            £{data.settings.monthlyPrice} a month after the trial. Cancel anytime, your data is
+            retained.
           </p>
         </div>
       </main>

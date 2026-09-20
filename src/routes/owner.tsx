@@ -24,7 +24,7 @@ const TABS = [
 ] as const;
 
 /**
- * Route guard. The real check is profiles.is_platform_owner enforced in RLS 
+ * Route guard. The real check is profiles.is_platform_owner enforced in RLS
  * this mirrors it so the surface is never reachable by typing the URL.
  */
 function OwnerShell() {
@@ -47,7 +47,10 @@ function OwnerShell() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[15px] text-fog">{data.ownerName}</span>
-            <Link to="/app" className="inline-flex min-h-11 items-center text-[15px] font-semibold text-amber">
+            <Link
+              to="/app"
+              className="inline-flex min-h-11 items-center text-[15px] font-semibold text-amber"
+            >
               Go to app
             </Link>
           </div>
@@ -92,9 +95,7 @@ function NotAuthorised() {
       <div className="max-w-sm text-center">
         <ShieldAlert className="mx-auto size-10 text-slate" aria-hidden />
         <h1 className="mt-4 text-2xl font-semibold">Not available</h1>
-        <p className="mt-2 text-[16px] text-slate">
-          This area is for the platform owner only.
-        </p>
+        <p className="mt-2 text-[16px] text-slate">This area is for the platform owner only.</p>
         <Link
           to="/app"
           className="tap mt-6 inline-block rounded-xl bg-amber px-5 py-3 font-semibold text-ink"

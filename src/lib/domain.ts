@@ -8,13 +8,7 @@
 export type Role = "owner" | "office_admin" | "engineer" | "subcontractor" | "read_only";
 
 export type EnquiryStatus =
-  | "new"
-  | "needs_contact"
-  | "awaiting_customer"
-  | "qualified"
-  | "quoted"
-  | "converted"
-  | "declined";
+  "new" | "needs_contact" | "awaiting_customer" | "qualified" | "quoted" | "converted" | "declined";
 
 export type QuoteStatus =
   | "draft"
@@ -53,18 +47,10 @@ export type TaskStatus = "open" | "waiting" | "monitoring" | "due" | "complete" 
 export type EvidenceStage = "before" | "during" | "testing" | "after";
 
 export type DepositRule =
-  | "percentage"
-  | "fixed_amount"
-  | "none_trusted_customer"
-  | "account_customer"
-  | "stage_payments";
+  "percentage" | "fixed_amount" | "none_trusted_customer" | "account_customer" | "stage_payments";
 
 export type PropertyRelationship =
-  | "owner_occupier"
-  | "landlord"
-  | "tenant"
-  | "managing_agent"
-  | "other";
+  "owner_occupier" | "landlord" | "tenant" | "managing_agent" | "other";
 
 export const STATUS_LABELS: Record<string, string> = {
   // enquiry

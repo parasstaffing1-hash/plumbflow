@@ -77,10 +77,13 @@ function Enquiries() {
       validUntil: new Date(Date.now() + 7 * 86400000).toISOString(),
     });
     setEnquiry(enquiry.id, { status: "quoted" });
-    log("enquiry", enquiry.id, `Call-out quote ${quote.quoteNumber} sent to ${enquiry.contactName}`);
+    log(
+      "enquiry",
+      enquiry.id,
+      `Call-out quote ${quote.quoteNumber} sent to ${enquiry.contactName}`,
+    );
     toast.success(`${quote.quoteNumber} sent, ${callOut.name}`);
   }
-
 
   return (
     <div>
@@ -133,7 +136,6 @@ function Enquiries() {
               ) : null
             }
           />
-
         ) : (
           list.map((enquiry) => (
             <article
@@ -184,7 +186,6 @@ function Enquiries() {
                 </ul>
               ) : null}
 
-
               {can.canEdit ? (
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   <a
@@ -206,7 +207,6 @@ function Enquiries() {
                     className="tap flex items-center justify-center gap-2 rounded-xl bg-amber text-base font-bold text-ink"
                   >
                     <Receipt className="size-5" aria-hidden /> Send call-out quote
-
                   </button>
                   <button
                     type="button"

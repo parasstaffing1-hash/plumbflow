@@ -45,7 +45,11 @@ export function VoiceField({
                 : "border-line bg-surface text-slate",
             )}
           >
-            {listening ? <MicOff className="size-5" aria-hidden /> : <Mic className="size-5" aria-hidden />}
+            {listening ? (
+              <MicOff className="size-5" aria-hidden />
+            ) : (
+              <Mic className="size-5" aria-hidden />
+            )}
           </button>
         ) : null}
       </div>

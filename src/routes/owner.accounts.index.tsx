@@ -107,7 +107,10 @@ function AccountsList() {
 
       <div className="space-y-3 md:hidden">
         {rows.map((account) => (
-          <article key={account.id} className="rounded-xl border border-line bg-paper p-4 shadow-card">
+          <article
+            key={account.id}
+            className="rounded-xl border border-line bg-paper p-4 shadow-card"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
@@ -152,7 +155,9 @@ function AccountsList() {
               {account.subscriptionStatus !== "comped" ? (
                 <button
                   type="button"
-                  onClick={() => setAction({ account, status: "comped", title: "Comp this account" })}
+                  onClick={() =>
+                    setAction({ account, status: "comped", title: "Comp this account" })
+                  }
                   className="tap rounded-lg border border-line px-4 text-[15px] font-semibold"
                 >
                   Comp
@@ -161,7 +166,9 @@ function AccountsList() {
               {account.subscriptionStatus !== "canceled" ? (
                 <button
                   type="button"
-                  onClick={() => setAction({ account, status: "canceled", title: "Suspend access" })}
+                  onClick={() =>
+                    setAction({ account, status: "canceled", title: "Suspend access" })
+                  }
                   className="tap rounded-lg border border-line px-4 text-[15px] font-semibold"
                 >
                   Suspend
@@ -198,7 +205,6 @@ function AccountsList() {
 
       <div className="hidden overflow-x-auto rounded-xl border border-line bg-paper shadow-card md:block">
         <table className="w-full min-w-[900px] text-left text-[15px]">
-
           <thead className="border-b border-line bg-surface">
             <tr className="label-caps text-slate">
               <th className="px-4 py-3">Business</th>

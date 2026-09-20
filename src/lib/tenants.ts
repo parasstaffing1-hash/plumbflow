@@ -121,7 +121,6 @@ const WEEKDAYS_SAT: TenantHours[] = [
   },
 ];
 
-
 export const TENANT_PROFILES: Record<string, TenantProfile> = {
   "rch-drainage": {
     trade: "Blocked drains, CCTV surveys and 24 hour emergencies",

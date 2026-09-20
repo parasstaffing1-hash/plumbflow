@@ -38,12 +38,14 @@ function ReportPage() {
   const search = Route.useSearch();
   const { tenant, setEmergency } = useTenant();
   const navigate = useNavigate();
+  const firstName =
+    tenant.account.ownerName?.trim().split(" ")[0] || tenant.account.businessName || "us";
 
   return (
     <main className="px-4 py-7">
       <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-bold tracking-tight text-ink">
-          Tell {tenant.account.ownerName.split(" ")[0]} what has gone wrong
+          Tell {firstName} what has gone wrong
         </h1>
         <p className="mt-2 text-lg text-slate">
           It takes a minute. We call you back with a price before we come out.

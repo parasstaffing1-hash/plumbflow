@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   ActivityEntry,
   AppData,
@@ -60,11 +68,7 @@ function uid(prefix: string): string {
 interface StoreValue {
   data: AppData;
   update: (updater: (draft: AppData) => AppData) => void;
-  log: (
-    entityType: ActivityEntry["entityType"],
-    entityId: string,
-    message: string,
-  ) => void;
+  log: (entityType: ActivityEntry["entityType"], entityId: string, message: string) => void;
   activityFor: (entityType: ActivityEntry["entityType"], entityId: string) => ActivityEntry[];
   currentUser: { id: string; name: string; role: AppData["team"][number]["role"] };
   can: ReturnType<typeof capabilitiesFor>;
@@ -87,9 +91,7 @@ interface StoreValue {
   addVariation: (jobId: string, description: string, amount: number) => void;
   addQuote: (quote: Omit<Quote, "id" | "quoteNumber" | "orgId">) => Quote;
   addCustomer: (input: Omit<Customer, "id" | "orgId">) => Customer;
-  addEnquiry: (
-    input: Omit<Enquiry, "id" | "orgId" | "reference" | "receivedAt">,
-  ) => Enquiry;
+  addEnquiry: (input: Omit<Enquiry, "id" | "orgId" | "reference" | "receivedAt">) => Enquiry;
   addProperty: (input: Omit<Property, "id" | "orgId">) => Property;
   addTask: (title: string, dueDate: string) => void;
   nextJobNumber: () => string;
@@ -124,34 +126,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const currentUser = useMemo(() => {
-    const member = data.team.find((m) => m.id === data.currentUserId) ?? data.team[0]!;
+    const member = data.team.find((m) => m.id === data.currentUserId) ?? data.team[0] ?? {
+      id: "u_default",
+      orgId: data.org.id,
+      name: "Trade Engineer",
+      email: "engineer@rchplumbflow.co.uk",
+      role: "owner" as const,
+    };
     return member;
-  }, [data.team, data.currentUserId]);
+  }, [data.team, data.currentUserId, data.org.id]);
 
-  const log = useCallback<StoreValue["log"]>(
-    (entityType, entityId, message) => {
-      setData((prev) => {
-        const actor =
-          prev.team.find((m) => m.id === prev.currentUserId)?.name ?? "Unknown user";
-        return {
-          ...prev,
-          activity: [
-            {
-              id: uid("a"),
-              orgId: prev.org.id,
-              entityType,
-              entityId,
-              message,
-              actor,
-              at: new Date().toISOString(),
-            },
-            ...prev.activity,
-          ],
-        };
-      });
-    },
-    [],
-  );
+  const log = useCallback<StoreValue["log"]>((entityType, entityId, message) => {
+    setData((prev) => {
+      const actor = prev.team.find((m) => m.id === prev.currentUserId)?.name ?? "Unknown user";
+      return {
+        ...prev,
+        activity: [
+          {
+            id: uid("a"),
+            orgId: prev.org.id,
+            entityType,
+            entityId,
+            message,
+            actor,
+            at: new Date().toISOString(),
+          },
+          ...prev.activity,
+        ],
+      };
+    });
+  }, []);
 
   const value = useMemo<StoreValue>(() => {
     const patch = <K extends keyof AppData>(key: K, id: string, changes: object) =>

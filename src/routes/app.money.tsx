@@ -80,7 +80,6 @@ function Money() {
       return a.invoiceNumber.localeCompare(b.invoiceNumber);
     });
 
-
   return (
     <div>
       <PageHeader title="Money" subtitle="Invoices, payments and totals" />

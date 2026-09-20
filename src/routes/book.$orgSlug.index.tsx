@@ -41,12 +41,8 @@ function TenantHome() {
     })),
     profile.gasSafe ? { icon: ShieldCheck, text: profile.gasSafe } : null,
     profile.vatNumber ? { icon: BadgePoundSterling, text: "VAT registered business" } : null,
-    profile.photosWithEveryJob
-      ? { icon: Camera, text: "Photos of every job sent to you" }
-      : null,
-    profile.noFixNoFee
-      ? { icon: Clock, text: "No call out charge if we cannot fix it" }
-      : null,
+    profile.photosWithEveryJob ? { icon: Camera, text: "Photos of every job sent to you" } : null,
+    profile.noFixNoFee ? { icon: Clock, text: "No call out charge if we cannot fix it" } : null,
   ].filter(Boolean) as Array<{ icon: typeof ShieldCheck; text: string }>;
 
   return (
@@ -145,12 +141,17 @@ function TenantHome() {
         <div className="mx-auto max-w-3xl">
           <h2 className="text-2xl font-bold text-ink">What we deal with</h2>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {(profile.problemCards ?? profile.problems.map((label) => ({ label, service: "" }))).map((card) => (
+            {(
+              profile.problemCards ?? profile.problems.map((label) => ({ label, service: "" }))
+            ).map((card) => (
               <button
                 key={card.label}
                 type="button"
                 onClick={() =>
-                  goToReport({ problem: card.label, ...(card.service ? { service: card.service } : {}) })
+                  goToReport({
+                    problem: card.label,
+                    ...(card.service ? { service: card.service } : {}),
+                  })
                 }
                 className="min-h-14 rounded-2xl border border-line bg-paper px-3 py-3 text-left text-base font-semibold text-ink"
               >

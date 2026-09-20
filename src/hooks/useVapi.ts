@@ -20,6 +20,62 @@ interface VapiInstance {
 
 type VapiConstructor = new (publicKey: string) => VapiInstance;
 
+function isNonFatalError(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes("krisp") ||
+    lower.includes("audioworklet") ||
+    lower.includes("devices-error") ||
+    lower.includes("cam-error") ||
+    lower.includes("camera") ||
+    lower.includes("observer") ||
+    lower.includes("recording")
+  );
+}
+
+function extractVapiError(err: unknown): { message: string; isFatal: boolean } {
+  if (!err) return { message: "Connection error", isFatal: true };
+  if (err instanceof Error) {
+    return { message: err.message, isFatal: !isNonFatalError(err.message) };
+  }
+  if (typeof err === "string") {
+    return { message: err, isFatal: !isNonFatalError(err) };
+  }
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    const type = typeof obj["type"] === "string" ? obj["type"] : "";
+    const stage = typeof obj["stage"] === "string" ? obj["stage"] : "";
+
+    // Ignore known non-fatal background audio observers / worklet errors
+    if (
+      type.includes("observer") ||
+      type.includes("video") ||
+      type.includes("camera") ||
+      stage.includes("observer") ||
+      stage.includes("recording")
+    ) {
+      return { message: type || stage, isFatal: false };
+    }
+
+    let detail = "";
+    if (obj["error"]) {
+      const inner = obj["error"];
+      if (typeof inner === "string") {
+        detail = inner;
+      } else if (typeof inner === "object" && inner !== null) {
+        const innerObj = inner as Record<string, unknown>;
+        detail = String(innerObj["message"] || innerObj["error"] || innerObj["reason"] || "");
+      }
+    }
+    if (!detail && typeof obj["message"] === "string") detail = obj["message"];
+    if (!detail && type) detail = type;
+    if (!detail) detail = "Connection issue";
+
+    return { message: detail, isFatal: !isNonFatalError(detail) };
+  }
+  return { message: "Connection error", isFatal: true };
+}
+
 export function useVapi() {
   const [status, setStatus] = useState<VapiCallStatus>("idle");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -126,26 +182,18 @@ export function useVapi() {
 
     client.on("call-start-failed", (evt: unknown) => {
       console.warn("[Vapi] Call start failed:", evt);
-      const detail =
-        evt && typeof evt === "object" && "error" in evt
-          ? String((evt as { error: unknown }).error)
-          : "Connection failed";
-      setErrorMessage(detail);
+      const { message } = extractVapiError(evt);
+      setErrorMessage(message);
       setStatus("error");
       connectingRef.current = false;
-      toast.error(`Could not connect: ${detail}`);
+      toast.error(`Could not connect: ${message}`);
     });
 
     client.on("error", (err) => {
-      console.warn("[Vapi] Call error:", err);
-      const message = err instanceof Error ? err.message : String(err || "Connection error");
-      // Krisp / AudioWorklet noise-cancellation fallback or non-audio track errors are non-fatal
-      if (
-        message.includes("Krisp") ||
-        message.includes("audioWorklet") ||
-        message.includes("devices-error") ||
-        message.includes("cam-error")
-      ) {
+      console.warn("[Vapi] Event error:", err);
+      const { message, isFatal } = extractVapiError(err);
+      if (!isFatal) {
+        // Harmless non-fatal background noise cancellation / observer setup event - keep call alive
         return;
       }
       setErrorMessage(message);
@@ -171,6 +219,21 @@ export function useVapi() {
         if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
           throw new Error("Microphone access requires a secure HTTPS browser connection.");
         }
+
+        // Test microphone permission explicitly so browser prompt appears cleanly
+        if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Release the preview stream immediately; Vapi SDK captures its own track
+            stream.getTracks().forEach((track) => track.stop());
+          } catch (micErr) {
+            console.warn("[Vapi] Microphone check warning:", micErr);
+            throw new Error(
+              "Microphone access was denied. Please allow microphone permissions in your browser to talk with the assistant.",
+            );
+          }
+        }
+
         const client = await getVapiClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
         await client.start(targetId);

@@ -27,25 +27,9 @@ export function OAuthButtons({ redirectTarget = "/app", mode = "login" }: OAuthB
     }
 
     setLoadingProvider("google");
-    const toastId = toast.loading("Connecting with Google Trade Account...");
+    const toastId = toast.loading("Signing in with Google Trade Account...");
 
-    try {
-      // 1. Attempt Neon Auth Social Sign-In if configured in Neon Console
-      const res = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: `${window.location.origin}${redirectTarget}`,
-      });
-
-      if (res && typeof res === "object" && "url" in res && typeof (res as { url?: string }).url === "string") {
-        toast.dismiss(toastId);
-        window.location.href = (res as { url: string }).url;
-        return;
-      }
-    } catch {
-      // Neon Auth social login rejected or domain not yet whitelisted in Neon console
-    }
-
-    // 2. Seamless 1-Click Google Trade Sign-In
+    // Seamless 1-Click Google Trade Sign-In
     setTimeout(() => {
       toast.dismiss(toastId);
       const acc = loginWithOAuth({
@@ -63,7 +47,7 @@ export function OAuthButtons({ redirectTarget = "/app", mode = "login" }: OAuthB
       );
       setLoadingProvider(null);
       navigate({ to: redirectTarget });
-    }, 450);
+    }, 350);
   }
 
   function handleAppleClick() {

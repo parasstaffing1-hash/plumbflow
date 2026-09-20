@@ -337,12 +337,51 @@ function LoginPage() {
 
           <button
             type="submit"
-            className="tap flex w-full items-center justify-center gap-2 rounded-xl bg-amber px-6 py-4 text-lg font-semibold text-ink transition-transform active:scale-[0.99]"
+            className="tap flex w-full items-center justify-center gap-2 rounded-xl bg-amber px-6 py-4 text-lg font-semibold text-ink transition-transform active:scale-[0.99] cursor-pointer"
           >
             Log in
             <ArrowRight className="size-5" />
           </button>
         </form>
+
+        {/* Quick Demo Contractor Accounts */}
+        <div className="mt-6 rounded-xl border border-line bg-paper p-4">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate">
+            Quick Contractor Test Logins (Password: password123)
+          </p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("ray@rchdrainage.co.uk");
+                setPassword("password123");
+                const res = login("ray@rchdrainage.co.uk", "password123");
+                if (res.success && res.account) {
+                  toast.success(`Welcome back, ${res.account.ownerName}!`);
+                  navigate({ to: redirectTarget });
+                }
+              }}
+              className="tap inline-flex items-center gap-1.5 rounded-lg border border-amber/40 bg-amber/10 px-3 py-1.5 text-xs font-semibold text-ink hover:bg-amber hover:text-ink transition cursor-pointer"
+            >
+              ⚡ Ray Hardwick (RCH Drainage)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("dean@towcesterheating.co.uk");
+                setPassword("password123");
+                const res = login("dean@towcesterheating.co.uk", "password123");
+                if (res.success && res.account) {
+                  toast.success(`Welcome back, ${res.account.ownerName}!`);
+                  navigate({ to: redirectTarget });
+                }
+              }}
+              className="tap inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-slate hover:text-ink hover:border-slate transition cursor-pointer"
+            >
+              ⚡ Dean Fletcher (Towcester Heating)
+            </button>
+          </div>
+        </div>
 
         <p className="mt-6 text-[16px] text-slate">
           No account yet?{" "}

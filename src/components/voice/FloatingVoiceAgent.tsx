@@ -68,7 +68,7 @@ export function FloatingVoiceAgent() {
             onClick={() => {
               setIsOpen(true);
               setIsMinimized(false);
-              if (status === "idle") {
+              if (status !== "active" && status !== "loading") {
                 startCall();
               }
             }}
@@ -194,8 +194,15 @@ export function FloatingVoiceAgent() {
                     : "🎙️ Listening to you"
                   : isLoading
                     ? "Establishing WebRTC audio connection..."
-                    : "Tap below to start hands-free voice control"}
+                    : status === "error"
+                      ? "⚠️ Call disconnected - Tap to retry"
+                      : "Tap below to start hands-free voice control"}
               </p>
+              {errorMessage && status === "error" && (
+                <p className="mt-2 text-xs text-emergency bg-emergency/10 border border-emergency/20 rounded-lg py-1 px-2.5 mx-auto inline-block max-w-[90%]">
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             {/* Conversation Transcripts Box */}
@@ -302,6 +309,11 @@ export function FloatingVoiceAgent() {
                     <>
                       <Radio className="size-4 animate-spin" />
                       <span>Connecting Call...</span>
+                    </>
+                  ) : status === "error" ? (
+                    <>
+                      <PhoneCall className="size-4" />
+                      <span>Retry Voice Call</span>
                     </>
                   ) : (
                     <>

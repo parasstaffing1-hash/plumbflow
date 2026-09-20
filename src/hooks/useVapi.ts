@@ -124,9 +124,25 @@ export function useVapi() {
       }
     });
 
+    client.on("call-start-failed", (evt: unknown) => {
+      console.warn("[Vapi] Call start failed:", evt);
+      const detail =
+        evt && typeof evt === "object" && "error" in evt
+          ? String((evt as { error: unknown }).error)
+          : "Connection failed";
+      setErrorMessage(detail);
+      setStatus("error");
+      connectingRef.current = false;
+      toast.error(`Could not connect: ${detail}`);
+    });
+
     client.on("error", (err) => {
       console.warn("[Vapi] Call error:", err);
       const message = err instanceof Error ? err.message : String(err || "Connection error");
+      // Krisp / AudioWorklet noise-cancellation fallback is non-fatal in Daily.js
+      if (message.includes("Krisp") || message.includes("audioWorklet")) {
+        return;
+      }
       setErrorMessage(message);
       setStatus("error");
       connectingRef.current = false;
@@ -149,12 +165,20 @@ export function useVapi() {
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
         await client.start(targetId);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Failed to start call";
+        let msg = err instanceof Error ? err.message : "Failed to start call";
+        if (
+          msg.includes("Permission denied") ||
+          msg.includes("NotAllowedError") ||
+          msg.toLowerCase().includes("permission")
+        ) {
+          msg =
+            "Microphone access was denied. Please allow microphone permissions in your browser to talk with the assistant.";
+        }
         console.error("[Vapi] Start error:", err);
         setErrorMessage(msg);
         setStatus("error");
         connectingRef.current = false;
-        toast.error(`Could not start voice call: ${msg}`);
+        toast.error(msg, { duration: 6000 });
       }
     },
     [getVapiClient, status],

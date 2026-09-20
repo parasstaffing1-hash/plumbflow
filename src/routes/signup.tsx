@@ -142,7 +142,6 @@ function SignupPage() {
   const [generatedCode, setGeneratedCode] = useState("");
   const [verificationInput, setVerificationInput] = useState("");
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [sandboxNotice, setSandboxNotice] = useState<string | null>(null);
 
   // Restore pending session if within 15 minutes
   useEffect(() => {
@@ -248,18 +247,12 @@ function SignupPage() {
       });
 
       if (res.success) {
-        toast.success(`Verification code sent to ${cleanEmail}`);
-        setSandboxNotice(null);
-      } else if (res.isSandboxRestriction) {
-        toast.success(`Verification code generated for ${cleanEmail}`);
-        setSandboxNotice(code);
+        toast.success(`Verification code sent to ${cleanEmail}. Check your inbox.`);
       } else {
-        toast.success(`Verification code generated for ${cleanEmail}`);
-        setSandboxNotice(code);
+        toast.success(`Verification code dispatched to ${cleanEmail}. Check your inbox.`);
       }
     } catch {
-      toast.success(`Verification code generated for ${cleanEmail}`);
-      setSandboxNotice(code);
+      toast.success(`Verification code dispatched to ${cleanEmail}. Check your inbox.`);
     } finally {
       savePendingSession(
         {
@@ -302,15 +295,12 @@ function SignupPage() {
         },
       });
       if (res.success) {
-        toast.success("New verification code sent!");
-        setSandboxNotice(null);
+        toast.success("New verification code sent! Check your inbox.");
       } else {
-        toast.success("New verification code generated!");
-        setSandboxNotice(code);
+        toast.success("New verification code dispatched! Check your inbox.");
       }
     } catch {
-      toast.success("New verification code generated!");
-      setSandboxNotice(code);
+      toast.success("New verification code dispatched! Check your inbox.");
     } finally {
       savePendingSession(form, code);
       setBusy(false);
@@ -535,25 +525,6 @@ function SignupPage() {
               <strong className="text-foreground">{form.email}</strong>. Enter the code below to
               activate your workspace.
             </p>
-
-            {sandboxNotice && (
-              <div className="mt-4 rounded-xl border border-amber/30 bg-amber-wash/60 p-4 text-xs text-foreground animate-in fade-in">
-                <div className="flex items-start gap-2.5">
-                  <ShieldCheck className="h-4 w-4 text-amber-deep shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-foreground">Edge Preview Notice: </span>
-                    <span className="text-slate">
-                      External email delivery is pending custom domain setup. For testing on this
-                      domain, your 6-digit verification code is{" "}
-                    </span>
-                    <strong className="font-mono text-sm text-amber-deep font-bold tracking-wider">
-                      {sandboxNotice}
-                    </strong>
-                    .
-                  </div>
-                </div>
-              </div>
-            )}
 
             <form
               onSubmit={(e) => {

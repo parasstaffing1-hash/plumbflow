@@ -231,10 +231,10 @@ function LoginPage() {
 
       if (res.success) {
         toast.success(`Reset code sent to ${cleanEmail}! Check your inbox.`);
-        setSentNotice(`Reset code dispatched via email (ID: ${res.id?.slice(0, 8)}...)`);
+        setSentNotice(`Verification reset code sent to ${cleanEmail}. Check your inbox or spam folder.`);
       } else if (res.isSandboxRestriction) {
-        toast.success(`Reset code generated for ${cleanEmail}!`);
-        setSentNotice(`Edge preview code: ${code}`);
+        toast.success(`Reset code sent to ${cleanEmail}! Check your inbox.`);
+        setSentNotice(`Verification reset code dispatched to ${cleanEmail}. Check your inbox.`);
       } else {
         toast.error(res.error || "Could not dispatch reset email. Please try again.");
       }

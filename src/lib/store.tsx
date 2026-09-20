@@ -23,21 +23,112 @@ import type {
   TaskItem,
 } from "./domain";
 import { capabilitiesFor } from "./domain";
-import { createSeedData } from "./seed";
+import { createSeedData, seedJobTypes, seedPriceBook } from "./seed";
+import type { Account } from "./platform";
+import { usePlatform } from "./platform";
 
-const STORAGE_KEY = "rch-plumbflow:v4";
-const DEFAULT_COUNTERS = { quote: 136, job: 212, invoice: 155, enquiry: 105 };
+export function createRealWorkspaceData(account?: Account): AppData {
+  const orgId = account?.id || "org_main";
+  const orgName = account?.businessName?.trim() || "PlumbFlow Trade";
+  const owner = account?.ownerName?.trim() || "Trade Engineer";
+  const email = account?.email?.trim() || "engineer@plumbflow.co.uk";
+  const phone = account?.phone?.trim() || "";
+  const town = account?.town?.trim() || "";
 
-function loadData(): AppData {
-  if (typeof window === "undefined") return createSeedData();
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return createSeedData();
-    const parsed = JSON.parse(raw) as AppData;
-    return { ...parsed, counters: { ...DEFAULT_COUNTERS, ...parsed.counters } };
-  } catch {
-    return createSeedData();
+  const jobTypes: JobType[] = seedJobTypes.map((jt) => ({
+    ...jt,
+    id: `jt_${jt.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
+    orgId,
+  }));
+
+  const priceBook: PriceBookItem[] = seedPriceBook.map((pb) => ({
+    ...pb,
+    id: `pb_${pb.name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`,
+    orgId,
+  }));
+
+  return {
+    org: {
+      id: orgId,
+      name: orgName,
+      tradingName: orgName,
+      phone,
+      email,
+      town,
+      vatRate: 0.2,
+      defaultDepositRule: "none_trusted_customer",
+      defaultDepositPercentage: 20,
+      minimumCalloutItemId: priceBook[0]?.id ?? null,
+    },
+    team: [
+      {
+        id: `u_${orgId}`,
+        orgId,
+        name: owner,
+        role: "owner",
+      },
+    ],
+    currentUserId: `u_${orgId}`,
+    jobTypes,
+    priceBook,
+    customers: [],
+    properties: [],
+    customerProperties: [],
+    enquiries: [],
+    quotes: [],
+    jobs: [],
+    variations: [],
+    invoices: [],
+    tasks: [],
+    activity: [
+      {
+        id: `act_${Date.now()}`,
+        orgId,
+        entityType: "job",
+        entityId: "init",
+        message: `Workspace initialized for ${orgName}. Add your first customer or job to get started.`,
+        actor: owner,
+        at: new Date().toISOString(),
+      },
+    ],
+    counters: { quote: 0, job: 0, invoice: 0, enquiry: 0 },
+  };
+}
+
+function getStorageKey(accountId?: string): string {
+  if (!accountId || accountId === "org_default") {
+    return "plumbflow:workspace:guest";
   }
+  return `plumbflow:workspace:${accountId}`;
+}
+
+const DEFAULT_COUNTERS = { quote: 0, job: 0, invoice: 0, enquiry: 0 };
+
+function loadDataForAccount(account?: Account): AppData {
+  if (typeof window === "undefined") {
+    return account && account.id !== "org_rch"
+      ? createRealWorkspaceData(account)
+      : createSeedData();
+  }
+
+  const key = getStorageKey(account?.id);
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw) as AppData;
+      return { ...parsed, counters: { ...DEFAULT_COUNTERS, ...parsed.counters } };
+    }
+  } catch {
+    // ignore parse error
+  }
+
+  // Real accounts start with clean, empty data (0 fake emergency jobs, £0 overdue)
+  if (account && account.id !== "org_rch") {
+    return createRealWorkspaceData(account);
+  }
+
+  // Fallback demo account
+  return createSeedData();
 }
 
 /**
@@ -45,9 +136,10 @@ function loadData(): AppData {
  * Returns false when the browser refused the write so callers can retry with
  * a lighter payload instead of losing the record.
  */
-function persist(data: AppData): boolean {
+function persistForAccount(data: AppData, accountId?: string): boolean {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const key = getStorageKey(accountId);
+    window.localStorage.setItem(key, JSON.stringify(data));
     return true;
   } catch {
     return false;
@@ -65,8 +157,10 @@ function uid(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-interface StoreValue {
+export interface StoreValue {
   data: AppData;
+  isDemoData: boolean;
+  clearAllData: () => void;
   update: (updater: (draft: AppData) => AppData) => void;
   log: (entityType: ActivityEntry["entityType"], entityId: string, message: string) => void;
   activityFor: (entityType: ActivityEntry["entityType"], entityId: string) => ActivityEntry[];
@@ -100,15 +194,19 @@ interface StoreValue {
 const StoreContext = createContext<StoreValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData>(() => createSeedData());
+  const { currentAccount } = usePlatform();
+  const accountId = currentAccount?.id;
 
+  const [data, setData] = useState<AppData>(() => loadDataForAccount(currentAccount));
+
+  // Reload when switching accounts
   useEffect(() => {
-    setData(loadData());
-  }, []);
+    setData(loadDataForAccount(currentAccount));
+  }, [accountId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (persist(data)) return;
+    if (persistForAccount(data, accountId)) return;
     /* Over quota. Drop homeowner photos, the enquiry itself must survive. */
     const stripped: AppData = {
       ...data,
@@ -118,8 +216,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return { ...enquiry, photos: [] };
       }),
     };
-    persist(stripped);
-  }, [data]);
+    persistForAccount(stripped, accountId);
+  }, [data, accountId]);
 
   const update = useCallback((updater: (draft: AppData) => AppData) => {
     setData((prev) => updater(structuredClone(prev)));
@@ -158,6 +256,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const isDemoData = useMemo(() => {
+    return (
+      data.customers.some((c) => c.name.toLowerCase().includes("marie osei")) ||
+      data.org.name.toLowerCase().includes("rch drainage") ||
+      data.invoices.some((i) => i.id === "inv_seed_1" || i.id === "inv_seed_12")
+    );
+  }, [data]);
+
+  const clearAllData = useCallback(() => {
+    const fresh = createRealWorkspaceData(currentAccount);
+    setData(fresh);
+    persistForAccount(fresh, accountId);
+  }, [currentAccount, accountId]);
+
   const value = useMemo<StoreValue>(() => {
     const patch = <K extends keyof AppData>(key: K, id: string, changes: object) =>
       update((draft) => {
@@ -169,11 +281,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return {
       data,
+      isDemoData,
+      clearAllData,
       update,
       log,
       currentUser,
       can: capabilitiesFor(currentUser.role),
-      reset: () => setData(createSeedData()),
+      reset: () => {
+        if (currentAccount?.id && currentAccount.id !== "org_rch") {
+          clearAllData();
+        } else {
+          setData(createSeedData());
+        }
+      },
       activityFor: (entityType, entityId) =>
         data.activity.filter((a) => a.entityType === entityType && a.entityId === entityId),
       customer: (id) => data.customers.find((c) => c.id === id),
@@ -280,7 +400,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       nextJobNumber: () => `J-${String(data.counters.job + 1).padStart(4, "0")}`,
     };
-  }, [data, update, log, currentUser]);
+  }, [data, update, log, currentUser, isDemoData, clearAllData, currentAccount]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

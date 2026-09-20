@@ -60,7 +60,7 @@ export const seedJobTypes: JobType[] = JOB_TYPE_SEED.map(
 
 /* ---------- price book ---------- */
 
-const priceBook: PriceBookItem[] = [
+export const seedPriceBook: PriceBookItem[] = [
   {
     orgId: ORG,
     id: "pb_callout",
@@ -1566,6 +1566,8 @@ const extraPriceBook: PriceBookItem[] = PB_EXTRA.map(
     category,
   }),
 );
+
+const priceBook = seedPriceBook;
 
 const extraCustomers: Customer[] = Array.from({ length: 48 }, (_, i) => {
   const n = i + 13;

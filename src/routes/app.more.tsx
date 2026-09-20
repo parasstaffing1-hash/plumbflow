@@ -46,7 +46,7 @@ export const Route = createFileRoute("/app/more")({
 });
 
 function More() {
-  const { data, update, currentUser } = useStore();
+  const { data, update, currentUser, isDemoData, clearAllData } = useStore();
   const { data: platform, currentAccount, logout } = usePlatform();
   const navigate = useNavigate();
 
@@ -55,26 +55,92 @@ function More() {
 
   return (
     <div>
-      <PageHeader title="More" subtitle="Everything else in the business" />
-      <main className="space-y-5 px-4 py-5">
-        <section className="space-y-3">
-          {LINKS.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="tap flex w-full items-center justify-between rounded-2xl border border-line bg-paper px-4 text-lg font-semibold text-ink"
+      <header className="bg-ink px-4 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-5 text-paper">
+        <h1 className="text-2xl font-semibold">More</h1>
+        <p className="mt-1 text-base text-fog">Settings, team and links</p>
+      </header>
+
+      <main className="space-y-4 px-4 py-5">
+        {/* Workspace data management */}
+        {isDemoData ? (
+          <section className="rounded-2xl border border-amber/40 bg-amber-wash/50 p-4">
+            <h2 className="label-caps text-amber-deep">Demo Data Active</h2>
+            <p className="mt-1 text-xs text-slate">
+              This workspace contains sample records (Marie Osei, sample invoices). Clear demo data to start fresh with your real business data.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Clear demo data and start with an empty, real workspace?")) {
+                  clearAllData();
+                  toast.success("Demo data cleared! Workspace ready for real jobs.");
+                }
+              }}
+              className="tap mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-xs font-semibold text-paper hover:bg-slate transition cursor-pointer"
             >
-              <span className="flex items-center gap-3">
-                <Icon className="size-5 text-fog" aria-hidden />
-                {label}
-              </span>
-              <ChevronRight className="size-5 text-fog" aria-hidden />
-            </Link>
-          ))}
+              Clear Demo Data & Start Fresh
+            </button>
+          </section>
+        ) : (
+          <section className="rounded-2xl border border-line bg-paper p-4">
+            <h2 className="label-caps">Workspace Data</h2>
+            <p className="mt-1 text-xs text-slate">
+              Clean real workspace active for <strong>{businessName}</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Reset all workspace records to a fresh clean slate? This action cannot be undone.",
+                  )
+                ) {
+                  clearAllData();
+                  toast.success("Workspace reset to a clean slate.");
+                }
+              }}
+              className="tap mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 transition cursor-pointer"
+            >
+              Reset Workspace Data
+            </button>
+          </section>
+        )}
+
+        <section className="divide-y divide-line rounded-2xl border border-line bg-paper">
+          <Link
+            to="/app/booking-page"
+            className="tap flex items-center justify-between px-4 text-base font-semibold text-ink"
+          >
+            <span className="flex items-center gap-3">
+              <Globe className="size-5 text-slate" aria-hidden />
+              Your booking link
+            </span>
+            <ChevronRight className="size-5 text-slate" aria-hidden />
+          </Link>
+          <Link
+            to="/app/price-book"
+            className="tap flex items-center justify-between px-4 text-base font-semibold text-ink"
+          >
+            <span className="flex items-center gap-3">
+              <BookOpen className="size-5 text-slate" aria-hidden />
+              Price book
+            </span>
+            <ChevronRight className="size-5 text-slate" aria-hidden />
+          </Link>
+          <Link
+            to="/app/settings"
+            className="tap flex items-center justify-between px-4 text-base font-semibold text-ink"
+          >
+            <span className="flex items-center gap-3">
+              <Settings className="size-5 text-slate" aria-hidden />
+              Settings
+            </span>
+            <ChevronRight className="size-5 text-slate" aria-hidden />
+          </Link>
           {platform.isPlatformOwner ? (
             <Link
               to="/owner"
-              className="tap flex w-full items-center justify-between rounded-2xl border border-amber bg-amber-wash px-4 text-lg font-semibold text-ink"
+              className="tap flex items-center justify-between bg-amber-wash px-4 text-base font-semibold text-ink"
             >
               <span className="flex items-center gap-3">
                 <ShieldAlert className="size-5 text-amber-deep" aria-hidden />

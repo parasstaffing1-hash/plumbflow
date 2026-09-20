@@ -8,6 +8,8 @@ import {
   PoundSterling,
   TriangleAlert,
   ChevronRight,
+  LogOut,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { EmergencyStrip } from "@/components/EmergencyStrip";
@@ -15,6 +17,7 @@ import { JobRow } from "@/components/JobRow";
 import { EmptyState } from "@/components/EmptyState";
 import { formatCurrency, formatDayLabel } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { usePlatform } from "@/lib/platform";
 import { invoiceBalance, invoicePaid, quoteNet } from "@/lib/domain";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -45,8 +48,20 @@ function isToday(iso: string): boolean {
 }
 
 function Today() {
-  const { data, can, currentUser, setTask, customer, setEnquiry, setJob, log, addQuote } =
-    useStore();
+  const {
+    data,
+    can,
+    currentUser,
+    setTask,
+    customer,
+    setEnquiry,
+    setJob,
+    log,
+    addQuote,
+    isDemoData,
+    clearAllData,
+  } = useStore();
+  const { currentAccount, logout } = usePlatform();
 
   const navigate = useNavigate();
   const emergencyTrack = useRef<HTMLDivElement | null>(null);
@@ -169,13 +184,62 @@ function Today() {
   return (
     <div>
       <header className="bg-ink px-4 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-5 text-paper">
-        <p className="label-caps text-fog">{formatDayLabel(new Date())}</p>
-        <h1 className="mt-1 text-2xl font-semibold">Today</h1>
-        <p className="mt-1 text-base text-fog">
-          {todaysJobs.length} {todaysJobs.length === 1 ? "job" : "jobs"} booked ·{" "}
-          {newEnquiries.length} {newEnquiries.length === 1 ? "enquiry" : "enquiries"} to action
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="label-caps text-fog">
+              {formatDayLabel(new Date())} · {currentAccount?.businessName || data.org.name}
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold">Today</h1>
+            <p className="mt-1 text-base text-fog">
+              {todaysJobs.length} {todaysJobs.length === 1 ? "job" : "jobs"} booked ·{" "}
+              {newEnquiries.length} {newEnquiries.length === 1 ? "enquiry" : "enquiries"} to action
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              toast.success("Signed out successfully.");
+              navigate({ to: "/login" });
+            }}
+            className="tap flex items-center gap-1.5 rounded-lg border border-ink-soft bg-ink-soft/70 px-3 py-1.5 text-xs font-semibold text-fog hover:text-red-400 hover:border-red-400/30 transition cursor-pointer"
+            title="Sign out of your account"
+          >
+            <LogOut className="size-3.5" />
+            <span>Log out</span>
+          </button>
+        </div>
       </header>
+
+      {isDemoData && (
+        <div className="bg-amber/15 border-b border-amber/30 px-4 py-3 text-ink">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-start sm:items-center gap-2">
+              <Sparkles className="size-4 text-amber-deep shrink-0 mt-0.5 sm:mt-0" />
+              <p className="text-xs text-ink">
+                <strong className="font-semibold">Sample Demo Workspace Active:</strong> Showing sample
+                jobs (Marie Osei) and mock invoices.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Clear demo data and start with a fresh, clean workspace for your real business?",
+                  )
+                ) {
+                  clearAllData();
+                  toast.success("Demo data cleared! Workspace ready for real jobs.");
+                }
+              }}
+              className="tap self-start sm:self-auto rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-paper hover:bg-slate transition cursor-pointer shrink-0"
+            >
+              Clear Demo Data & Start Fresh
+            </button>
+          </div>
+        </div>
+      )}
 
       {emergencyCount > 0 ? (
         <div>

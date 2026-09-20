@@ -12,6 +12,8 @@ import {
   Bot,
   User,
   Radio,
+  ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 import { useVapi } from "@/hooks/useVapi";
 import { cn } from "@/lib/utils";
@@ -51,7 +53,7 @@ export function FloatingVoiceAgent() {
     }
   }, [transcripts, isOpen]);
 
-  // If a call starts, auto-open the assistant modal if closed
+  // If a call becomes active, ensure the modal is visible
   useEffect(() => {
     if (isActive && !isOpen) {
       setIsOpen(true);
@@ -59,22 +61,38 @@ export function FloatingVoiceAgent() {
     }
   }, [isActive, isOpen]);
 
+  const handleTriggerClick = () => {
+    if (isOpen && !isMinimized) {
+      setIsMinimized(true);
+    } else {
+      setIsOpen(true);
+      setIsMinimized(false);
+    }
+  };
+
+  const handleStartCall = (initialPrompt?: string) => {
+    startCall();
+  };
+
   return (
     <>
+      {/* Mobile backdrop when modal is open */}
+      {isOpen && !isMinimized && (
+        <div
+          className="fixed inset-0 z-[85] bg-black/40 backdrop-blur-xs md:hidden"
+          onClick={() => setIsMinimized(true)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Floating Trigger Button */}
       {(!isOpen || isMinimized) && (
-        <div className="fixed bottom-24 right-4 z-50 md:bottom-8 md:right-8 animate-in fade-in zoom-in-95">
+        <div className="fixed bottom-20 right-4 z-[90] md:bottom-8 md:right-8 animate-in fade-in zoom-in-95">
           <button
             type="button"
-            onClick={() => {
-              setIsOpen(true);
-              setIsMinimized(false);
-              if (status !== "active" && status !== "loading") {
-                startCall();
-              }
-            }}
+            onClick={handleTriggerClick}
             className={cn(
-              "group relative flex items-center gap-3 rounded-full p-3.5 shadow-2xl transition-all duration-300 active:scale-95",
+              "group relative flex items-center gap-3 rounded-full p-3.5 shadow-2xl transition-all duration-300 active:scale-95 cursor-pointer",
               isActive
                 ? "bg-amber text-ink ring-4 ring-amber/30 hover:bg-amber-deep"
                 : "bg-ink text-paper border border-amber/30 hover:border-amber hover:shadow-amber/10",
@@ -98,11 +116,11 @@ export function FloatingVoiceAgent() {
               )}
             </div>
 
-            <div className="hidden sm:flex flex-col text-left pr-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-deep">
+            <div className="flex flex-col text-left pr-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-deep">
                 {isActive ? "Voice Agent Active" : "Voice AI Assistant"}
               </span>
-              <span className="text-[13px] font-semibold text-foreground">
+              <span className="text-[13px] font-semibold text-foreground leading-tight">
                 {isActive ? (isSpeaking ? "Speaking..." : "Listening...") : "Talk Hands-Free"}
               </span>
             </div>
@@ -117,7 +135,7 @@ export function FloatingVoiceAgent() {
 
       {/* Expanded Voice Agent Drawer / Modal */}
       {isOpen && !isMinimized && (
-        <div className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-md md:inset-x-auto md:right-8 md:bottom-8 w-full md:w-[420px] animate-in fade-in slide-in-from-bottom-6 duration-300">
+        <div className="fixed inset-x-3 bottom-16 sm:bottom-20 z-[90] mx-auto max-w-md md:inset-x-auto md:right-8 md:bottom-8 w-full md:w-[420px] animate-in fade-in slide-in-from-bottom-6 duration-300">
           <div className="overflow-hidden rounded-3xl border border-line bg-paper shadow-2xl backdrop-blur-xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-line bg-ink px-5 py-4 text-paper">
@@ -149,8 +167,9 @@ export function FloatingVoiceAgent() {
                 <button
                   type="button"
                   onClick={() => setIsMinimized(true)}
-                  className="rounded-lg p-1.5 hover:bg-white/10 hover:text-paper transition"
+                  className="rounded-lg p-1.5 hover:bg-white/10 hover:text-paper transition cursor-pointer"
                   aria-label="Minimize Voice Assistant"
+                  title="Minimize"
                 >
                   <Minimize2 className="size-4" />
                 </button>
@@ -160,8 +179,9 @@ export function FloatingVoiceAgent() {
                     if (isActive) stopCall();
                     setIsOpen(false);
                   }}
-                  className="rounded-lg p-1.5 hover:bg-white/10 hover:text-paper transition"
+                  className="rounded-lg p-1.5 hover:bg-white/10 hover:text-paper transition cursor-pointer"
                   aria-label="Close Voice Assistant"
+                  title="Close"
                 >
                   <X className="size-4" />
                 </button>
@@ -169,19 +189,27 @@ export function FloatingVoiceAgent() {
             </div>
 
             {/* Audio Waveform & Status Visualizer */}
-            <div className="border-b border-line bg-surface/50 px-5 py-6 text-center">
+            <div className="border-b border-line bg-surface/50 px-5 py-5 text-center">
               <div className="flex items-center justify-center gap-1.5 h-12">
                 {[40, 70, 95, 60, 85, 50, 90, 65, 45, 80, 55, 75].map((height, i) => {
                   const animatedHeight = isActive
                     ? Math.max(12, Math.min(48, height * (volume * 2.5 + (isSpeaking ? 0.6 : 0.2))))
-                    : 8;
+                    : isLoading
+                      ? Math.max(10, Math.sin((Date.now() / 200) + i) * 20 + 24)
+                      : 8;
                   return (
                     <span
                       key={i}
                       style={{ height: `${animatedHeight}px` }}
                       className={cn(
                         "w-1.5 rounded-full transition-all duration-150",
-                        isActive ? (isSpeaking ? "bg-amber" : "bg-emerald-500") : "bg-line",
+                        isActive
+                          ? isSpeaking
+                            ? "bg-amber"
+                            : "bg-emerald-500"
+                          : isLoading
+                            ? "bg-amber/60 animate-pulse"
+                            : "bg-line",
                       )}
                     />
                   );
@@ -196,34 +224,35 @@ export function FloatingVoiceAgent() {
                   : isLoading
                     ? "Establishing WebRTC audio connection..."
                     : status === "error"
-                      ? "⚠️ Call disconnected - Tap to retry"
-                      : "Tap below to start hands-free voice control"}
+                      ? "⚠️ Connection issue - Tap below to retry"
+                      : "Tap Start Voice Call to talk hands-free"}
               </p>
               {errorMessage && status === "error" && (
-                <p className="mt-2 text-xs text-emergency bg-emergency/10 border border-emergency/20 rounded-lg py-1 px-2.5 mx-auto inline-block max-w-[90%]">
-                  {errorMessage}
-                </p>
+                <div className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-emergency bg-emergency/10 border border-emergency/20 rounded-lg py-1.5 px-3 mx-auto max-w-[95%] text-left">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
               )}
             </div>
 
             {/* Conversation Transcripts Box */}
-            <div className="max-h-64 min-h-36 overflow-y-auto p-4 space-y-3 bg-surface/30">
+            <div className="max-h-60 min-h-32 overflow-y-auto p-4 space-y-3 bg-surface/30">
               {transcripts.length === 0 ? (
-                <div className="text-center py-6 text-slate">
+                <div className="text-center py-5 text-slate">
                   <p className="text-xs font-medium">No voice notes yet.</p>
                   <p className="text-[11px] text-fog mt-1">
-                    Try speaking naturally to book jobs, draft quotes, or record completion details.
+                    Tap below or choose a prompt to start hands-free voice control:
                   </p>
 
-                  <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+                  <div className="mt-3 flex flex-wrap justify-center gap-1.5">
                     {QUICK_PROMPTS.map((prompt) => (
                       <button
                         key={prompt}
                         type="button"
                         onClick={() => {
-                          if (!isActive) startCall();
+                          if (!isActive) handleStartCall(prompt);
                         }}
-                        className="rounded-full border border-line bg-paper px-3 py-1 text-[11px] text-slate hover:text-ink hover:border-amber transition text-left"
+                        className="rounded-full border border-line bg-paper px-3 py-1.5 text-[11px] text-slate hover:text-ink hover:border-amber transition text-left cursor-pointer active:scale-95 shadow-2xs"
                       >
                         "{prompt}"
                       </button>
@@ -280,7 +309,7 @@ export function FloatingVoiceAgent() {
                     type="button"
                     onClick={toggleMute}
                     className={cn(
-                      "tap flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-xs font-semibold transition",
+                      "tap flex items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-xs font-semibold transition cursor-pointer",
                       isMuted
                         ? "border-amber-deep bg-amber/20 text-amber-deep"
                         : "border-line bg-surface text-slate hover:text-ink",
@@ -293,7 +322,7 @@ export function FloatingVoiceAgent() {
                   <button
                     type="button"
                     onClick={stopCall}
-                    className="tap flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emergency py-3.5 text-sm font-bold text-white hover:bg-emergency/90 transition shadow-lg shadow-emergency/20"
+                    className="tap flex-1 flex items-center justify-center gap-2 rounded-2xl bg-emergency py-3.5 text-sm font-bold text-white hover:bg-emergency/90 transition shadow-lg shadow-emergency/20 cursor-pointer active:scale-98"
                   >
                     <PhoneOff className="size-4" />
                     <span>End Voice Call</span>
@@ -302,23 +331,23 @@ export function FloatingVoiceAgent() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => startCall()}
+                  onClick={() => handleStartCall()}
                   disabled={isLoading}
-                  className="tap flex-1 flex items-center justify-center gap-2 rounded-2xl bg-amber py-3.5 text-sm font-bold text-ink hover:bg-amber-deep transition shadow-lg shadow-amber/20 disabled:opacity-50"
+                  className="tap flex-1 flex items-center justify-center gap-2.5 rounded-2xl bg-amber py-3.5 text-sm font-bold text-ink hover:bg-amber-deep transition shadow-lg shadow-amber/20 disabled:opacity-60 cursor-pointer active:scale-98"
                 >
                   {isLoading ? (
                     <>
-                      <Radio className="size-4 animate-spin" />
+                      <Radio className="size-4 animate-spin text-ink" />
                       <span>Connecting Call...</span>
                     </>
                   ) : status === "error" ? (
                     <>
-                      <PhoneCall className="size-4" />
+                      <PhoneCall className="size-4 text-ink" />
                       <span>Retry Voice Call</span>
                     </>
                   ) : (
                     <>
-                      <PhoneCall className="size-4" />
+                      <Mic className="size-4 text-ink" />
                       <span>Start Voice Call</span>
                     </>
                   )}

@@ -139,14 +139,21 @@ export function useVapi() {
     client.on("error", (err) => {
       console.warn("[Vapi] Call error:", err);
       const message = err instanceof Error ? err.message : String(err || "Connection error");
-      // Krisp / AudioWorklet noise-cancellation fallback is non-fatal in Daily.js
-      if (message.includes("Krisp") || message.includes("audioWorklet")) {
+      // Krisp / AudioWorklet noise-cancellation fallback or non-audio track errors are non-fatal
+      if (
+        message.includes("Krisp") ||
+        message.includes("audioWorklet") ||
+        message.includes("devices-error") ||
+        message.includes("cam-error")
+      ) {
         return;
       }
       setErrorMessage(message);
-      setStatus("error");
-      connectingRef.current = false;
-      toast.error(`Voice assistant: ${message}`);
+      if (connectingRef.current) {
+        setStatus("error");
+        connectingRef.current = false;
+        toast.error(`Voice assistant: ${message}`);
+      }
     });
 
     vapiRef.current = client;
@@ -161,6 +168,9 @@ export function useVapi() {
       setErrorMessage(null);
 
       try {
+        if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Microphone access requires a secure HTTPS browser connection.");
+        }
         const client = await getVapiClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
         await client.start(targetId);
@@ -192,6 +202,7 @@ export function useVapi() {
     setIsSpeaking(false);
     setIsListening(false);
     setVolume(0);
+    setErrorMessage(null);
     connectingRef.current = false;
   }, []);
 

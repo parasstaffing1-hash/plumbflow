@@ -8,7 +8,7 @@ import {
 } from "@/lib/vapi";
 
 interface VapiInstance {
-  start: (assistantId: string) => Promise<unknown>;
+  start: (assistantId: string, assistantOverrides?: unknown) => Promise<unknown>;
   stop: () => void;
   setMuted: (muted: boolean) => void;
   isMuted: () => boolean;
@@ -18,7 +18,12 @@ interface VapiInstance {
   cleanup?: () => void;
 }
 
-type VapiConstructor = new (publicKey: string) => VapiInstance;
+type VapiConstructor = new (
+  publicKey: string,
+  apiBaseUrl?: string,
+  dailyCallConfig?: unknown,
+  dailyCallObject?: { audioSource?: MediaStreamTrack | boolean | string; startAudioOff?: boolean }
+) => VapiInstance;
 
 function isNonFatalError(msg: string): boolean {
   const lower = msg.toLowerCase();
@@ -81,132 +86,175 @@ export function useVapi() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [volume, setVolume] = useState(0);
+  const [assistantVolume, setAssistantVolume] = useState(0);
+  const [userVolume, setUserVolume] = useState(0);
   const [transcripts, setTranscripts] = useState<VapiTranscriptMessage[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const vapiRef = useRef<VapiInstance | null>(null);
   const connectingRef = useRef(false);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const localTrackRef = useRef<MediaStreamTrack | null>(null);
 
-  // Initialize Vapi SDK dynamically in the browser
-  const getVapiClient = useCallback(async (): Promise<VapiInstance> => {
-    if (vapiRef.current) return vapiRef.current;
-    if (typeof window === "undefined") {
-      throw new Error("Vapi can only be instantiated in the browser.");
+  const cleanupLocalMedia = useCallback(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch {}
+      });
+      localStreamRef.current = null;
     }
+    localTrackRef.current = null;
+  }, []);
 
-    const mod = (await import("@vapi-ai/web")) as unknown as {
-      default?: VapiConstructor | { default?: VapiConstructor };
-      Vapi?: VapiConstructor;
-    };
-    const VapiClass: VapiConstructor | undefined =
-      typeof mod.default === "function"
-        ? mod.default
-        : typeof (mod.default as { default?: VapiConstructor })?.default === "function"
-          ? (mod.default as { default?: VapiConstructor }).default
-          : typeof mod.Vapi === "function"
-            ? mod.Vapi
-            : typeof mod === "function"
-              ? (mod as unknown as VapiConstructor)
-              : undefined;
-
-    if (!VapiClass) {
-      throw new Error("Unable to locate Vapi SDK constructor.");
-    }
-
-    const client = new VapiClass(VAPI_PUBLIC_KEY);
-
-    client.on("call-start", () => {
-      setStatus("active");
-      connectingRef.current = false;
-      toast.success("Connected to PlumbFlow AI Voice Assistant");
-    });
-
-    client.on("call-end", () => {
-      setStatus("idle");
-      setIsSpeaking(false);
-      setIsListening(false);
-      setVolume(0);
-      connectingRef.current = false;
-    });
-
-    client.on("speech-start", () => {
-      setIsSpeaking(true);
-    });
-
-    client.on("speech-end", () => {
-      setIsSpeaking(false);
-    });
-
-    client.on("volume-level", (level) => {
-      if (typeof level === "number") {
-        setVolume(level);
+  // Initialize Vapi SDK dynamically in the browser with live MediaStreamTrack attached
+  const createVapiClient = useCallback(
+    async (audioTrack: MediaStreamTrack): Promise<VapiInstance> => {
+      if (typeof window === "undefined") {
+        throw new Error("Vapi can only be instantiated in the browser.");
       }
-    });
 
-    client.on("message", (msg) => {
-      if (!msg || typeof msg !== "object") return;
-      const payload = msg as Record<string, unknown>;
+      // If a previous instance exists, clean it up before instantiating new one
+      if (vapiRef.current) {
+        try {
+          vapiRef.current.stop();
+        } catch {}
+        vapiRef.current = null;
+      }
 
-      if (payload["type"] === "transcript") {
-        const text = (payload["transcript"] as string) || "";
-        const role = (payload["role"] as "user" | "assistant") || "assistant";
-        const transcriptType = payload["transcriptType"] as string;
+      const mod = (await import("@vapi-ai/web")) as unknown as {
+        default?: VapiConstructor | { default?: VapiConstructor };
+        Vapi?: VapiConstructor;
+      };
+      const VapiClass: VapiConstructor | undefined =
+        typeof mod.default === "function"
+          ? mod.default
+          : typeof (mod.default as { default?: VapiConstructor })?.default === "function"
+            ? (mod.default as { default?: VapiConstructor }).default
+            : typeof mod.Vapi === "function"
+              ? mod.Vapi
+              : typeof mod === "function"
+                ? (mod as unknown as VapiConstructor)
+                : undefined;
 
-        if (text && (transcriptType === "final" || transcriptType === "partial")) {
-          setTranscripts((prev) => {
-            const last = prev[prev.length - 1];
-            if (last && last.role === role && transcriptType === "partial") {
-              return [...prev.slice(0, -1), { ...last, text }];
-            }
-            if (transcriptType === "final") {
-              if (last && last.role === role && last.text === text) return prev;
-              return [
-                ...prev,
-                {
-                  id: `vmsg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-                  role,
-                  text,
-                  timestamp: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }),
-                },
-              ];
-            }
-            return prev;
-          });
+      if (!VapiClass) {
+        throw new Error("Unable to locate Vapi SDK constructor.");
+      }
+
+      // Pass the active live MediaStreamTrack directly into Daily via audioSource
+      // This eliminates the "no inbound audio" race condition where stopping tracks
+      // leaves Daily with an unattached or muted audio input.
+      const client = new VapiClass(VAPI_PUBLIC_KEY, undefined, undefined, {
+        audioSource: audioTrack,
+      });
+
+      client.on("call-start", () => {
+        setStatus("active");
+        connectingRef.current = false;
+        toast.success("Connected to PlumbFlow AI Voice Assistant");
+      });
+
+      client.on("call-end", () => {
+        setStatus("idle");
+        setIsSpeaking(false);
+        setIsListening(false);
+        setAssistantVolume(0);
+        setUserVolume(0);
+        connectingRef.current = false;
+        cleanupLocalMedia();
+      });
+
+      client.on("speech-start", () => {
+        setIsSpeaking(true);
+      });
+
+      client.on("speech-end", () => {
+        setIsSpeaking(false);
+      });
+
+      // Remote assistant voice volume
+      client.on("volume-level", (level) => {
+        if (typeof level === "number") {
+          setAssistantVolume(level);
         }
-      }
-    });
+      });
 
-    client.on("call-start-failed", (evt: unknown) => {
-      console.warn("[Vapi] Call start failed:", evt);
-      const { message } = extractVapiError(evt);
-      setErrorMessage(message);
-      setStatus("error");
-      connectingRef.current = false;
-      toast.error(`Could not connect: ${message}`);
-    });
+      // Local user microphone volume (activates Daily's local audio observer)
+      client.on("local-volume-level", (level) => {
+        if (typeof level === "number") {
+          setUserVolume(level);
+          setIsListening(level > 0.05);
+        }
+      });
 
-    client.on("error", (err) => {
-      console.warn("[Vapi] Event error:", err);
-      const { message, isFatal } = extractVapiError(err);
-      if (!isFatal) {
-        // Harmless non-fatal background noise cancellation / observer setup event - keep call alive
-        return;
-      }
-      setErrorMessage(message);
-      if (connectingRef.current) {
+      client.on("message", (msg) => {
+        if (!msg || typeof msg !== "object") return;
+        const payload = msg as Record<string, unknown>;
+
+        if (payload["type"] === "transcript") {
+          const text = (payload["transcript"] as string) || "";
+          const role = (payload["role"] as "user" | "assistant") || "assistant";
+          const transcriptType = payload["transcriptType"] as string;
+
+          if (text && (transcriptType === "final" || transcriptType === "partial")) {
+            setTranscripts((prev) => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === role && transcriptType === "partial") {
+                return [...prev.slice(0, -1), { ...last, text }];
+              }
+              if (transcriptType === "final") {
+                if (last && last.role === role && last.text === text) return prev;
+                return [
+                  ...prev,
+                  {
+                    id: `vmsg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                    role,
+                    text,
+                    timestamp: new Date().toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }),
+                  },
+                ];
+              }
+              return prev;
+            });
+          }
+        }
+      });
+
+      client.on("call-start-failed", (evt: unknown) => {
+        console.warn("[Vapi] Call start failed:", evt);
+        const { message } = extractVapiError(evt);
+        setErrorMessage(message);
         setStatus("error");
         connectingRef.current = false;
-        toast.error(`Voice assistant: ${message}`);
-      }
-    });
+        cleanupLocalMedia();
+        toast.error(`Could not connect: ${message}`);
+      });
 
-    vapiRef.current = client;
-    return client;
-  }, []);
+      client.on("error", (err) => {
+        console.warn("[Vapi] Event error:", err);
+        const { message, isFatal } = extractVapiError(err);
+        if (!isFatal) {
+          // Harmless non-fatal background noise cancellation / observer setup event - keep call alive
+          return;
+        }
+        setErrorMessage(message);
+        if (connectingRef.current) {
+          setStatus("error");
+          connectingRef.current = false;
+          cleanupLocalMedia();
+          toast.error(`Voice assistant: ${message}`);
+        }
+      });
+
+      vapiRef.current = client;
+      return client;
+    },
+    [cleanupLocalMedia],
+  );
 
   const startCall = useCallback(
     async (overrideAssistantId?: string) => {
@@ -216,26 +264,56 @@ export function useVapi() {
       setErrorMessage(null);
 
       try {
-        if (typeof navigator !== "undefined" && !navigator.mediaDevices?.getUserMedia) {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
           throw new Error("Microphone access requires a secure HTTPS browser connection.");
         }
 
-        // Test microphone permission explicitly so browser prompt appears cleanly
-        if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Release the preview stream immediately; Vapi SDK captures its own track
-            stream.getTracks().forEach((track) => track.stop());
-          } catch (micErr) {
-            console.warn("[Vapi] Microphone check warning:", micErr);
-            throw new Error(
-              "Microphone access was denied. Please allow microphone permissions in your browser to talk with the assistant.",
-            );
-          }
+        // Release any previous tracks before acquiring fresh stream
+        cleanupLocalMedia();
+
+        // 1. Acquire live microphone stream with full voice processing filters
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+        } catch (micErr) {
+          console.warn("[Vapi] Microphone access denied:", micErr);
+          throw new Error(
+            "Microphone access was denied. Please allow microphone permissions in your browser to talk with the assistant.",
+          );
         }
 
-        const client = await getVapiClient();
+        const audioTrack = stream.getAudioTracks()[0];
+        if (!audioTrack || audioTrack.readyState !== "live") {
+          throw new Error(
+            "Could not acquire an active microphone track. Please check your audio input device.",
+          );
+        }
+
+        // Attach listeners to detect hardware mute or disconnect
+        audioTrack.onmute = () => {
+          console.warn("[Vapi] Microphone track reported muted by system or hardware");
+        };
+        audioTrack.onunmute = () => {
+          console.info("[Vapi] Microphone track unmuted");
+        };
+        audioTrack.onended = () => {
+          console.warn("[Vapi] Microphone track ended unexpectedly");
+        };
+
+        localStreamRef.current = stream;
+        localTrackRef.current = audioTrack;
+
+        // 2. Instantiate Vapi with the verified live MediaStreamTrack attached directly
+        const client = await createVapiClient(audioTrack);
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
+
+        // 3. Connect to call
         await client.start(targetId);
       } catch (err) {
         let msg = err instanceof Error ? err.message : "Failed to start call";
@@ -251,28 +329,49 @@ export function useVapi() {
         setErrorMessage(msg);
         setStatus("error");
         connectingRef.current = false;
+        cleanupLocalMedia();
         toast.error(msg, { duration: 6000 });
       }
     },
-    [getVapiClient, status],
+    [cleanupLocalMedia, createVapiClient, status],
   );
 
   const stopCall = useCallback(() => {
     if (vapiRef.current) {
-      vapiRef.current.stop();
+      try {
+        vapiRef.current.stop();
+      } catch (e) {
+        console.warn("[Vapi] stopCall error:", e);
+      }
     }
+    cleanupLocalMedia();
     setStatus("idle");
     setIsSpeaking(false);
     setIsListening(false);
-    setVolume(0);
+    setAssistantVolume(0);
+    setUserVolume(0);
     setErrorMessage(null);
     connectingRef.current = false;
-  }, []);
+  }, [cleanupLocalMedia]);
 
   const toggleMute = useCallback(() => {
-    if (!vapiRef.current || status !== "active") return;
+    if (status !== "active") return;
     const nextMuted = !isMuted;
-    vapiRef.current.setMuted(nextMuted);
+
+    // Toggle hardware track directly
+    if (localTrackRef.current) {
+      localTrackRef.current.enabled = !nextMuted;
+    }
+
+    // Inform Daily/Vapi
+    if (vapiRef.current && typeof vapiRef.current.setMuted === "function") {
+      try {
+        vapiRef.current.setMuted(nextMuted);
+      } catch (e) {
+        console.warn("[Vapi] setMuted error:", e);
+      }
+    }
+
     setIsMuted(nextMuted);
     toast.info(nextMuted ? "Microphone muted" : "Microphone unmuted");
   }, [isMuted, status]);
@@ -310,17 +409,25 @@ export function useVapi() {
   useEffect(() => {
     return () => {
       if (vapiRef.current) {
-        vapiRef.current.stop();
+        try {
+          vapiRef.current.stop();
+        } catch {}
       }
+      cleanupLocalMedia();
     };
-  }, []);
+  }, [cleanupLocalMedia]);
+
+  // Combined volume: remote assistant when speaking, local mic when user talks
+  const activeVolume = isSpeaking ? assistantVolume : userVolume;
 
   return {
     status,
     isSpeaking,
     isListening,
     isMuted,
-    volume,
+    volume: activeVolume,
+    assistantVolume,
+    userVolume,
     transcripts,
     errorMessage,
     startCall,

@@ -33,6 +33,7 @@ export function FloatingVoiceAgent() {
   const {
     status,
     isSpeaking,
+    isListening,
     isMuted,
     volume,
     transcripts,
@@ -121,7 +122,7 @@ export function FloatingVoiceAgent() {
                 {isActive ? "Voice Agent Active" : "Voice AI Assistant"}
               </span>
               <span className="text-[13px] font-semibold text-foreground leading-tight">
-                {isActive ? (isSpeaking ? "Speaking..." : "Listening...") : "Talk Hands-Free"}
+                {isActive ? (isSpeaking ? "Speaking..." : isListening ? "Hearing you..." : "Listening...") : "Talk Hands-Free"}
               </span>
             </div>
 
@@ -220,7 +221,9 @@ export function FloatingVoiceAgent() {
                 {isActive
                   ? isSpeaking
                     ? "🔊 Assistant speaking"
-                    : "🎙️ Listening to you"
+                    : isListening
+                      ? "🎙️ Hearing your voice..."
+                      : "🎙️ Listening to you"
                   : isLoading
                     ? "Establishing WebRTC audio connection..."
                     : status === "error"

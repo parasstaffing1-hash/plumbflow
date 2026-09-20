@@ -1,29 +1,98 @@
-# Welcome to your Lovable project
+# 🔧 RCH PlumbFlow
 
-This project was built with [Lovable](https://lovable.dev).
+> Modern Job Management & Hands-Free AI Voice Assistant for Plumbing & Heating Engineers.
 
-## Build with Lovable
+**Live Production Sites**:
+- 🌐 [https://rchplumbflow.co.uk](https://rchplumbflow.co.uk)
+- 🌐 [https://www.rchplumbflow.co.uk](https://www.rchplumbflow.co.uk)
+- ⚡ [https://plumbflow.voicefield.workers.dev](https://plumbflow.voicefield.workers.dev)
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+---
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## 🚀 Key Features
 
-## Development
+- **🎙️ Real-time AI Voice Assistant (Hands-Free)**:
+  - Powered by **Vapi** WebRTC audio stream for real-time natural language voice interaction in the van or on-site.
+  - Dictate job completions, quote revisions, customer follow-ups, and booking appointments without typing.
+  - Resilient browser WebRTC integration with automatic reconnect and permission handling.
+- **⚡ Neon Auth (Managed Better Auth)**:
+  - Enterprise authentication backed by Neon Lakebase Postgres.
+  - Multi-tenant contractor workspaces with real-time session synchronization.
+  - Seamless fallback support for rapid demonstration contractor workspaces.
+- **📋 Complete Plumbing Contractor Workflow**:
+  - Customer CRM, job sheets, quotes, invoice generation, and price book.
+  - Public booking portals with dedicated area landing pages and slug routing.
+  - PDF/digital completion reports and safety certificates.
+- **🌍 Edge-Optimized Architecture**:
+  - Built with **TanStack Start**, **React 19**, and **Tailwind CSS**.
+  - Server-side rendered (SSR) and deployed to **Cloudflare Workers** with zero cold-starts.
+  - Static asset streaming via Cloudflare Assets KV.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+---
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+## 🛠️ Tech Stack
+
+- **Framework**: [TanStack Start](https://tanstack.com/start) (Full-stack SSR) + [React](https://react.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Voice AI**: [@vapi-ai/web](https://vapi.ai)
+- **Database & Auth**: [Neon](https://neon.tech) Lakebase Postgres & [Neon Auth](https://neon.com/docs/auth)
+- **Edge Deployment**: [Cloudflare Workers](https://workers.cloudflare.com/) via [Wrangler](https://developers.cloudflare.com/workers/wrangler/)
+- **Email Delivery**: [Resend](https://resend.com)
+- **Object Storage**: [Cloudflare R2](https://developers.cloudflare.com/r2/)
+
+---
+
+## 💻 Local Development
+
+### Prerequisites
+- Node.js 20+
+- npm or pnpm
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/parasstaffing1-hash/plumbflow.git
+cd plumbflow
+npm install
 ```
 
-## Built with
+### 2. Environment Configuration
+Copy `.env.example` to `.env` and fill in credentials:
+```bash
+cp .env.example .env
+```
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+Key environment variables:
+- `VITE_VAPI_PUBLIC_KEY`: Vapi public API key
+- `VITE_VAPI_ASSISTANT_ID`: Vapi assistant ID
+- `VITE_NEON_AUTH_URL`: Neon Auth endpoint URL
+- `CLOUDFLARE_API_TOKEN` & `CLOUDFLARE_ACCOUNT_ID`: Edge deployment credentials
+- `RESEND_API_KEY`: Email notification API key
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 🚀 Build & Edge Deployment
+
+```bash
+# Type check
+npx tsc --noEmit
+
+# Lint
+npm run lint
+
+# Production build
+npm run build
+
+# Deploy to Cloudflare Workers
+npm run deploy
+```
+
+---
+
+## 📄 License
+All rights reserved © 2026 RCH PlumbFlow.

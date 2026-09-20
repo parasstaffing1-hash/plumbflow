@@ -19,52 +19,37 @@ interface VapiInstance {
 
 type VapiConstructor = new (publicKey: string) => VapiInstance;
 
-function isNonFatalError(msg: string): boolean {
-  const lower = msg.toLowerCase();
-  return (
-    lower.includes("krisp") ||
-    lower.includes("audioworklet") ||
-    lower.includes("devices-error") ||
-    lower.includes("cam-error") ||
-    lower.includes("camera") ||
-    lower.includes("observer") ||
-    lower.includes("recording")
-  );
-}
-
-function extractVapiError(err: unknown): { message: string; isFatal: boolean } {
-  if (!err) return { message: "Connection error", isFatal: true };
+function extractVapiError(err: unknown): { message: string } {
+  if (!err) return { message: "Connection issue" };
   if (err instanceof Error) {
-    const msg = err.message || "Unknown error";
-    return { message: msg, isFatal: !isNonFatalError(msg) };
+    let msg = err.message || "Connection error";
+    if (
+      msg.includes("Permission denied") ||
+      msg.includes("NotAllowedError") ||
+      msg.toLowerCase().includes("permission")
+    ) {
+      msg = "Microphone access was denied. Please allow microphone permissions in your browser.";
+    }
+    return { message: msg };
   }
   if (typeof err === "string") {
-    return { message: err, isFatal: !isNonFatalError(err) };
+    if (err.includes("[object Object]")) {
+      return { message: "Unable to connect to Voice AI. Please check microphone permissions." };
+    }
+    return { message: err };
   }
   if (typeof err === "object") {
     const obj = err as Record<string, unknown>;
-    const type = typeof obj["type"] === "string" ? obj["type"] : "";
-    const stage = typeof obj["stage"] === "string" ? obj["stage"] : "";
-
-    // Ignore known non-fatal background audio observers / worklet errors
-    if (
-      type.includes("observer") ||
-      type.includes("video") ||
-      type.includes("camera") ||
-      stage.includes("observer") ||
-      stage.includes("recording")
-    ) {
-      return { message: type || stage, isFatal: false };
-    }
-
     const unwrap = (val: unknown): string => {
       if (!val) return "";
-      if (typeof val === "string" && val !== "[object Object]") return val;
+      if (typeof val === "string" && !val.includes("[object Object]")) return val;
       if (val instanceof Error) return val.message;
       if (typeof val === "object") {
         const r = val as Record<string, unknown>;
-        if (typeof r["message"] === "string" && r["message"] !== "[object Object]") return r["message"];
-        if (typeof r["error"] === "string" && r["error"] !== "[object Object]") return r["error"];
+        if (typeof r["message"] === "string" && !r["message"].includes("[object Object]"))
+          return r["message"];
+        if (typeof r["error"] === "string" && !r["error"].includes("[object Object]"))
+          return r["error"];
         if (typeof r["errorMsg"] === "string") return r["errorMsg"];
         if (typeof r["reason"] === "string") return r["reason"];
         if (r["error"] && typeof r["error"] === "object") return unwrap(r["error"]);
@@ -72,14 +57,13 @@ function extractVapiError(err: unknown): { message: string; isFatal: boolean } {
       return "";
     };
 
-    let detail = unwrap(obj["error"]) || unwrap(obj["message"]) || type || stage || "Connection error";
-    if (!detail || detail === "[object Object]") {
-      detail = "Unable to connect to Voice AI. Please check microphone permissions.";
+    let detail = unwrap(obj["error"]) || unwrap(obj["message"]) || unwrap(obj["errorMsg"]);
+    if (!detail || detail.includes("[object Object]")) {
+      detail = "Connection issue. Please check microphone permissions and retry.";
     }
-
-    return { message: detail, isFatal: !isNonFatalError(detail) };
+    return { message: detail };
   }
-  return { message: "Connection error", isFatal: true };
+  return { message: "Connection issue" };
 }
 
 export function useVapi() {
@@ -100,7 +84,7 @@ export function useVapi() {
       throw new Error("Vapi can only be instantiated in the browser.");
     }
 
-    // Clean up any prior instance so retries start completely fresh
+    // Always clean up any existing instance so new calls start 100% fresh
     if (vapiRef.current) {
       try {
         vapiRef.current.stop();
@@ -129,10 +113,16 @@ export function useVapi() {
 
     const client = new VapiClass(VAPI_PUBLIC_KEY);
 
+    // Call connected events
     client.on("call-start", () => {
       setStatus("active");
       connectingRef.current = false;
       toast.success("Connected to PlumbFlow AI Voice Assistant");
+    });
+
+    client.on("call-start-success", () => {
+      setStatus("active");
+      connectingRef.current = false;
     });
 
     client.on("call-end", () => {
@@ -152,14 +142,14 @@ export function useVapi() {
       setIsSpeaking(false);
     });
 
-    // Remote assistant voice volume level
+    // Remote assistant audio level
     client.on("volume-level", (level) => {
       if (typeof level === "number") {
         setAssistantVolume(level);
       }
     });
 
-    // Local user microphone volume level
+    // User microphone audio level
     client.on("local-volume-level", (level) => {
       if (typeof level === "number") {
         setUserVolume(level);
@@ -203,27 +193,19 @@ export function useVapi() {
       }
     });
 
+    // Non-fatal background events (Krisp noise-reduction, audio observers) are logged only, never aborting the call
+    client.on("error", (err) => {
+      console.warn("[Vapi] Background event warning:", err);
+    });
+
+    // Genuine failure to join the call
     client.on("call-start-failed", (evt: unknown) => {
-      console.warn("[Vapi] Call start failed:", evt);
+      console.error("[Vapi] Call start failed:", evt);
       const { message } = extractVapiError(evt);
       setErrorMessage(message);
       setStatus("error");
       connectingRef.current = false;
       toast.error(`Could not connect: ${message}`);
-    });
-
-    client.on("error", (err) => {
-      console.warn("[Vapi] Event error:", err);
-      const { message, isFatal } = extractVapiError(err);
-      if (!isFatal) {
-        return;
-      }
-      setErrorMessage(message);
-      if (connectingRef.current) {
-        setStatus("error");
-        connectingRef.current = false;
-        toast.error(`Voice assistant: ${message}`);
-      }
     });
 
     vapiRef.current = client;
@@ -242,38 +224,24 @@ export function useVapi() {
           throw new Error("Microphone access requires a secure HTTPS browser connection.");
         }
 
-        // Check if mic permission is explicitly blocked
-        if (navigator.permissions && navigator.permissions.query) {
-          try {
-            const perm = await navigator.permissions.query({ name: "microphone" as PermissionName });
-            if (perm.state === "denied") {
-              throw new Error(
-                "Microphone access is blocked in your browser settings. Please allow microphone permissions for this site.",
-              );
-            }
-          } catch {
-            // Some browsers don't support querying 'microphone', safe to ignore
-          }
-        }
-
         const client = await initFreshClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
-        await client.start(targetId);
-      } catch (err) {
-        let msg = extractVapiError(err).message;
-        if (
-          msg.includes("Permission denied") ||
-          msg.includes("NotAllowedError") ||
-          msg.toLowerCase().includes("permission")
-        ) {
-          msg =
-            "Microphone access was denied. Please allow microphone permissions in your browser to talk with the assistant.";
+
+        // Start call directly - Daily connects WebRTC and acquires mic natively
+        const webCall = await client.start(targetId);
+
+        // Immediate activation once start() resolves
+        if (webCall) {
+          setStatus("active");
+          connectingRef.current = false;
         }
-        console.error("[Vapi] Start error:", err);
-        setErrorMessage(msg);
+      } catch (err) {
+        console.error("[Vapi] Start exception:", err);
+        const { message } = extractVapiError(err);
+        setErrorMessage(message);
         setStatus("error");
         connectingRef.current = false;
-        toast.error(msg, { duration: 6000 });
+        toast.error(message, { duration: 6000 });
       }
     },
     [initFreshClient, status],

@@ -39,6 +39,9 @@ if (fs.existsSync(serverWranglerPath)) {
     VITE_NEON_AUTH_URL:
       process.env.VITE_NEON_AUTH_URL ||
       "https://ep-ancient-salad-b50jp2r7.neonauth.c-7.us-east-2.aws.neon.tech/neondb/auth",
+    DEEPGRAM_API_KEY: process.env.DEEPGRAM_API_KEY || "074568ceb1140741097d232d140f1df611398d16",
+    VITE_DEEPGRAM_API_KEY:
+      process.env.VITE_DEEPGRAM_API_KEY || "074568ceb1140741097d232d140f1df611398d16",
   };
   fs.writeFileSync(serverWranglerPath, JSON.stringify(serverConfig, null, 2), "utf-8");
   console.log("📦 Injected server environment variables into edge worker config.");

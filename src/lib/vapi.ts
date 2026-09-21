@@ -15,3 +15,30 @@ export interface VapiTranscriptMessage {
 }
 
 export type VapiCallStatus = "idle" | "loading" | "active" | "error";
+
+/**
+ * Deepgram Nova-2 STT configuration for Vapi dispatcher.
+ * Boosts UK heating and plumbing terminology for accurate recognition.
+ */
+export const DEEPGRAM_TRANSCRIBER_CONFIG = {
+  transcriber: {
+    provider: "deepgram",
+    model: "nova-2",
+    language: "en-GB",
+    smartFormat: true,
+    keywords: [
+      "boiler:2",
+      "radiator:2",
+      "TRV:2",
+      "Worcester Bosch:2",
+      "Vaillant:2",
+      "Baxi:2",
+      "unvented cylinder:2",
+      "Megaflo:2",
+      "stopcock:2",
+      "powerflush:2",
+      "flue:2",
+      "Saniflo:2",
+    ],
+  },
+};

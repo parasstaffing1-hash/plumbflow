@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useVapi } from "@/hooks/useVapi";
 import { cn } from "@/lib/utils";
+import { PlumberAvatar } from "./PlumberAvatar";
 
 const QUICK_PROMPTS = [
   "Book an emergency boiler repair for today",
@@ -86,14 +87,14 @@ export function FloatingVoiceAgent() {
         />
       )}
 
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button with Interactive Plumber Avatar */}
       {(!isOpen || isMinimized) && (
         <div className="fixed bottom-20 right-4 z-[90] md:bottom-8 md:right-8 animate-in fade-in zoom-in-95">
           <button
             type="button"
             onClick={handleTriggerClick}
             className={cn(
-              "group relative flex items-center gap-3 rounded-full p-3.5 shadow-2xl transition-all duration-300 active:scale-95 cursor-pointer",
+              "group relative flex items-center gap-3 rounded-full p-2 pr-4 shadow-2xl transition-all duration-300 active:scale-95 cursor-pointer",
               isActive
                 ? "bg-amber text-ink ring-4 ring-amber/30 hover:bg-amber-deep"
                 : "bg-ink text-paper border border-amber/30 hover:border-amber hover:shadow-amber/10",
@@ -105,31 +106,30 @@ export function FloatingVoiceAgent() {
               <span className="absolute -inset-1 rounded-full bg-amber/40 animate-ping pointer-events-none" />
             )}
 
-            <div className="relative flex size-6 items-center justify-center">
-              {isActive ? (
-                isSpeaking ? (
-                  <Volume2 className="size-5 animate-pulse text-ink" />
-                ) : (
-                  <Radio className="size-5 text-ink animate-bounce" />
-                )
-              ) : (
-                <Mic className="size-5 text-amber group-hover:scale-110 transition-transform" />
-              )}
-            </div>
+            {/* Plumber Avatar thumbnail in floating pill */}
+            <PlumberAvatar
+              size="md"
+              status={status}
+              isSpeaking={isSpeaking}
+              isListening={isListening}
+              volume={volume}
+              showBadge={true}
+            />
 
-            <div className="flex flex-col text-left pr-2">
+            <div className="flex flex-col text-left">
               <span className="text-[11px] font-bold uppercase tracking-wider text-amber-deep">
-                {isActive ? "Voice Agent Active" : "Voice AI Assistant"}
+                {isActive ? "Dave is Active" : "AI Voice Agent"}
               </span>
               <span className="text-[13px] font-semibold text-foreground leading-tight">
-                {isActive ? (isSpeaking ? "Speaking..." : isListening ? "Hearing you..." : "Listening...") : "Talk Hands-Free"}
+                {isActive
+                  ? isSpeaking
+                    ? "Speaking..."
+                    : isListening
+                      ? "Hearing you..."
+                      : "Listening..."
+                  : "Talk to Dave"}
               </span>
             </div>
-
-            {/* Live audio indicator badge */}
-            {isActive && (
-              <span className="flex size-3 rounded-full bg-emerald-500 ring-2 ring-white" />
-            )}
           </button>
         </div>
       )}
@@ -139,27 +139,28 @@ export function FloatingVoiceAgent() {
         <div className="fixed inset-x-3 bottom-16 sm:bottom-20 z-[90] mx-auto max-w-md md:inset-x-auto md:right-8 md:bottom-8 w-full md:w-[420px] animate-in fade-in slide-in-from-bottom-6 duration-300">
           <div className="overflow-hidden rounded-3xl border border-line bg-paper shadow-2xl backdrop-blur-xl">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-line bg-ink px-5 py-4 text-paper">
+            <div className="flex items-center justify-between border-b border-line bg-ink px-5 py-3.5 text-paper">
               <div className="flex items-center gap-3">
-                <div className="relative flex size-10 items-center justify-center rounded-2xl bg-amber/20 text-amber">
-                  <Bot className="size-5" />
-                  {isActive && (
-                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 ring-2 ring-ink" />
-                  )}
-                </div>
+                <PlumberAvatar
+                  size="sm"
+                  status={status}
+                  isSpeaking={isSpeaking}
+                  isListening={isListening}
+                  volume={volume}
+                />
                 <div>
-                  <h3 className="flex items-center gap-1.5 text-base font-bold text-paper">
-                    PlumbFlow Voice Agent
-                    <Sparkles className="size-3.5 text-amber" />
+                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-paper">
+                    Dave &bull; PlumbFlow Dispatcher
+                    <Sparkles className="size-3 text-amber" />
                   </h3>
-                  <p className="text-xs text-fog">
+                  <p className="text-[11px] text-fog">
                     {isActive
                       ? isSpeaking
-                        ? "AI Assistant is speaking..."
-                        : "Listening for your command..."
+                        ? "Dave is speaking..."
+                        : "Listening for your trade command..."
                       : isLoading
-                        ? "Connecting to Voice AI..."
-                        : "Powered by Vapi AI Dispatcher"}
+                        ? "Connecting to Dave..."
+                        : "Hands-Free Voice Dispatcher"}
                   </p>
                 </div>
               </div>
@@ -189,53 +190,94 @@ export function FloatingVoiceAgent() {
               </div>
             </div>
 
-            {/* Audio Waveform & Status Visualizer */}
-            <div className="border-b border-line bg-surface/50 px-5 py-5 text-center">
-              <div className="flex items-center justify-center gap-1.5 h-12">
-                {[40, 70, 95, 60, 85, 50, 90, 65, 45, 80, 55, 75].map((height, i) => {
-                  const animatedHeight = isActive
-                    ? Math.max(12, Math.min(48, height * (volume * 2.5 + (isSpeaking ? 0.6 : 0.2))))
-                    : isLoading
-                      ? Math.max(10, Math.sin((Date.now() / 200) + i) * 20 + 24)
-                      : 8;
-                  return (
+            {/* Interactive Plumber Avatar Hero Stage */}
+            <div className="border-b border-line bg-gradient-to-b from-ink/5 to-surface/80 px-5 pt-6 pb-5 text-center">
+              <div className="flex flex-col items-center justify-center">
+                {/* Large Interactive Plumber Avatar */}
+                <PlumberAvatar
+                  size="lg"
+                  status={status}
+                  isSpeaking={isSpeaking}
+                  isListening={isListening}
+                  isMuted={isMuted}
+                  volume={volume}
+                  interactive
+                  onClick={isActive ? toggleMute : () => handleStartCall()}
+                />
+
+                {/* Status Pill & State Caption */}
+                <div className="mt-3.5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-paper px-3 py-1 shadow-2xs border border-line">
                     <span
-                      key={i}
-                      style={{ height: `${animatedHeight}px` }}
                       className={cn(
-                        "w-1.5 rounded-full transition-all duration-150",
+                        "size-2 rounded-full",
                         isActive
                           ? isSpeaking
-                            ? "bg-amber"
-                            : "bg-emerald-500"
+                            ? "bg-amber animate-pulse"
+                            : isListening
+                              ? "bg-emerald-500 animate-ping"
+                              : "bg-emerald-500"
                           : isLoading
-                            ? "bg-amber/60 animate-pulse"
-                            : "bg-line",
+                            ? "bg-amber animate-spin"
+                            : "bg-slate/40",
                       )}
                     />
-                  );
-                })}
-              </div>
+                    <span className="text-xs font-bold text-ink">
+                      Dave &bull; AI Plumber Assistant
+                    </span>
+                  </div>
 
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-slate">
-                {isActive
-                  ? isSpeaking
-                    ? "🔊 Assistant speaking"
-                    : isListening
-                      ? "🎙️ Hearing your voice..."
-                      : "🎙️ Listening to you"
-                  : isLoading
-                    ? "Establishing WebRTC audio connection..."
-                    : status === "error"
-                      ? "⚠️ Connection issue - Tap below to retry"
-                      : "Tap Start Voice Call to talk hands-free"}
-              </p>
-              {errorMessage && status === "error" && (
-                <div className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-emergency bg-emergency/10 border border-emergency/20 rounded-lg py-1.5 px-3 mx-auto max-w-[95%] text-left">
-                  <AlertCircle className="size-4 shrink-0" />
-                  <span>{errorMessage}</span>
+                  <p className="mt-2 text-xs font-medium text-slate">
+                    {isActive
+                      ? isSpeaking
+                        ? "🔊 Dave is speaking to you..."
+                        : isListening
+                          ? "🎙️ Hearing your voice... speak naturally"
+                          : isMuted
+                            ? "🔇 Microphone muted (tap Dave to unmute)"
+                            : "🎙️ Dave is listening to you"
+                      : isLoading
+                        ? "Establishing voice connection..."
+                        : status === "error"
+                          ? "⚠️ Connection issue - Tap Dave or below to retry"
+                          : "Tap Dave or Start Call to book jobs & query diary"}
+                  </p>
                 </div>
-              )}
+
+                {/* Animated Audio Waveform Bars */}
+                <div className="mt-3 flex items-center justify-center gap-1 h-6">
+                  {[20, 45, 70, 35, 60, 80, 50, 65, 30, 55, 40, 75, 45, 25].map((height, i) => {
+                    const animatedHeight = isActive
+                      ? Math.max(6, Math.min(24, height * (volume * 1.5 + (isSpeaking ? 0.35 : 0.15))))
+                      : isLoading
+                        ? Math.max(6, Math.sin(Date.now() / 200 + i) * 10 + 12)
+                        : 4;
+                    return (
+                      <span
+                        key={i}
+                        style={{ height: `${animatedHeight}px` }}
+                        className={cn(
+                          "w-1 rounded-full transition-all duration-150",
+                          isActive
+                            ? isSpeaking
+                              ? "bg-amber"
+                              : "bg-emerald-500"
+                            : isLoading
+                              ? "bg-amber/60 animate-pulse"
+                              : "bg-line",
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+
+                {errorMessage && status === "error" && (
+                  <div className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-emergency bg-emergency/10 border border-emergency/20 rounded-lg py-1.5 px-3 mx-auto max-w-[95%] text-left">
+                    <AlertCircle className="size-4 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Conversation Transcripts Box */}
@@ -280,7 +322,7 @@ export function FloatingVoiceAgent() {
                       {msg.role === "user" ? (
                         <User className="size-3.5" />
                       ) : (
-                        <Bot className="size-3.5" />
+                        <PlumberAvatar size="sm" showBadge={false} className="size-6 shrink-0" />
                       )}
                     </div>
                     <div>

@@ -3,18 +3,24 @@ import { useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Camera,
+  Check,
   ChevronRight,
   FileText,
   MapPin,
   MessageSquare,
+  PenTool,
   Phone,
   Plus,
+  ScanBarcode,
   ShieldAlert,
   TriangleAlert,
 } from "lucide-react";
 import { StatusChip } from "@/components/StatusChip";
 import { VoiceField } from "@/components/VoiceField";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
+import { SignatureModal } from "@/components/SignatureModal";
+import { BarcodeScannerModal } from "@/components/BarcodeScannerModal";
+import { triggerSuccessConfetti } from "@/lib/confetti";
 import { formatCurrency, formatDateTime, formatTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { NEXT_JOB_STEP, STAGE_LABELS, type EvidenceStage } from "@/lib/domain";
@@ -64,6 +70,8 @@ function JobDetail() {
 
   const job = data.jobs.find((row) => row.id === jobId);
   const [showGate, setShowGate] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const evidenceRef = useRef<HTMLDivElement>(null);
   const notesRef = useRef<HTMLDivElement>(null);
   const variationsRef = useRef<HTMLDivElement>(null);
@@ -172,7 +180,32 @@ function JobDetail() {
     log("job", job!.id, `Job ${job!.jobNumber} marked complete`);
     log("job", job!.id, `Draft invoice ${invoiceNumber} and completion pack generated`);
     toast.success(`Job complete, draft ${invoiceNumber} created`);
+    triggerSuccessConfetti();
     navigate({ to: "/app/jobs/$jobId/pack", params: { jobId: job!.id } });
+  }
+
+  function handleSaveSignature(dataUrl: string, signatoryName: string) {
+    if (!job) return;
+    setJob(job.id, {
+      customerSignature: {
+        dataUrl,
+        signatoryName,
+        signedAt: new Date().toISOString(),
+      },
+    });
+    log("job", job.id, `Customer sign-off captured for ${signatoryName}`);
+    toast.success(`Customer sign-off saved for ${signatoryName}`);
+    triggerSuccessConfetti();
+  }
+
+  function handleScanBarcode(scannedText: string) {
+    if (!job) return;
+    const currentNotes = job.partsUsedNotes?.trim() || "";
+    const appendText = `[Serial/Barcode: ${scannedText}]`;
+    const updatedNotes = currentNotes ? `${currentNotes}\n${appendText}` : appendText;
+    setJob(job.id, { partsUsedNotes: updatedNotes });
+    log("job", job.id, `Scanned serial/barcode: ${scannedText}`);
+    toast.success(`Scanned: ${scannedText} added to parts used notes`);
   }
 
   function resolveRequirement(requirement: Requirement, kind: "not_applicable" | "exception") {
@@ -339,6 +372,17 @@ function JobDetail() {
 
         {/* Notes */}
         <section ref={notesRef} className="space-y-4 rounded-2xl border border-line bg-paper p-4">
+          <div className="flex items-center justify-between gap-2 border-b border-line pb-2.5">
+            <h2 className="label-caps">Work & Parts Notes</h2>
+            <button
+              type="button"
+              onClick={() => setShowBarcodeScanner(true)}
+              className="tap flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink hover:bg-paper"
+            >
+              <ScanBarcode className="size-3.5 text-blue-600 dark:text-blue-400" />
+              Scan Boiler Serial / Barcode
+            </button>
+          </div>
           <VoiceField
             label="Work done notes"
             value={job.workDoneNotes}
@@ -492,6 +536,47 @@ function JobDetail() {
           </button>
         </section>
 
+        {/* Customer Sign-Off */}
+        <section className="rounded-2xl border border-line bg-paper p-4">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="label-caps">Customer Sign-Off</h2>
+              <p className="mt-1 text-sm text-slate">
+                {job.customerSignature
+                  ? `Signed by ${job.customerSignature.signatoryName} on ${formatDateTime(job.customerSignature.signedAt)}`
+                  : "Capture customer signature on mobile or tablet upon work completion."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSignatureModal(true)}
+              className="tap flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink hover:bg-paper"
+            >
+              <PenTool className="size-4 text-amber-deep" />
+              {job.customerSignature ? "Re-sign" : "Capture Signature"}
+            </button>
+          </div>
+
+          {job.customerSignature && (
+            <div className="mt-3 flex items-center gap-4 rounded-xl border border-line/70 bg-surface p-3">
+              <div className="h-16 w-36 shrink-0 rounded-lg border border-line bg-paper p-1 flex items-center justify-center overflow-hidden">
+                <img
+                  src={job.customerSignature.dataUrl}
+                  alt={`Signature of ${job.customerSignature.signatoryName}`}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <div className="text-xs text-slate">
+                <p className="font-semibold text-ink">{job.customerSignature.signatoryName}</p>
+                <p className="text-fog">{formatDateTime(job.customerSignature.signedAt)}</p>
+                <span className="inline-flex items-center gap-1 text-emerald-600 mt-1 font-semibold">
+                  <Check className="size-3.5" /> Customer approved on site
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+
         <ActivityTimeline entityType="job" entityId={job.id} />
 
         {job.status === "complete" ? (
@@ -527,6 +612,19 @@ function JobDetail() {
           )}
         </div>
       ) : null}
+
+      <SignatureModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        onSave={handleSaveSignature}
+        defaultName={person?.name || ""}
+      />
+
+      <BarcodeScannerModal
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleScanBarcode}
+      />
 
       {showGate ? (
         <CompletionGate

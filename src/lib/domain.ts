@@ -343,6 +343,11 @@ export interface Job {
   materials: MaterialItem[];
   waivers: EvidenceWaiver[];
   completedAt: string | null;
+  customerSignature?: {
+    dataUrl: string;
+    signatoryName: string;
+    signedAt: string;
+  };
 }
 
 export interface Payment {

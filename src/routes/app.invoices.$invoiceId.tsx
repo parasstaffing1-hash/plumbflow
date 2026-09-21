@@ -12,6 +12,7 @@ import {
   invoiceVat,
   lineTotal,
 } from "@/lib/domain";
+import { triggerSuccessConfetti } from "@/lib/confetti";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/invoices/$invoiceId")({
@@ -96,7 +97,11 @@ function InvoiceDetail() {
         method: "bank_transfer",
       });
       const paid = row.payments.reduce((sum, payment) => sum + payment.amount, 0);
-      row.status = paid + 0.005 >= invoiceGross(row, vat) ? "paid" : "part_paid";
+      const isNowPaid = paid + 0.005 >= invoiceGross(row, vat);
+      row.status = isNowPaid ? "paid" : "part_paid";
+      if (isNowPaid) {
+        triggerSuccessConfetti();
+      }
       return draft;
     });
     log("invoice", inv.id, `Payment of ${formatCurrency(amount)} recorded`);

@@ -193,6 +193,24 @@ function Pack() {
           )}
         </Block>
 
+        <Block title="11. Customer sign-off">
+          {job.customerSignature ? (
+            <div className="space-y-3">
+              <div className="h-24 max-w-xs rounded-xl border border-line bg-surface p-2 flex items-center justify-center overflow-hidden">
+                <img
+                  src={job.customerSignature.dataUrl}
+                  alt={`Signature of ${job.customerSignature.signatoryName}`}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+              <Row label="Signatory name" value={job.customerSignature.signatoryName} />
+              <Row label="Signed at" value={formatDateTime(job.customerSignature.signedAt)} />
+            </div>
+          ) : (
+            <p className="text-base text-fog">No digital customer sign-off recorded.</p>
+          )}
+        </Block>
+
         <button
           type="button"
           onClick={() => window.print()}

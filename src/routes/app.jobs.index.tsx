@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { JobRow } from "@/components/JobRow";
 import { EmptyState } from "@/components/EmptyState";
@@ -7,7 +7,9 @@ import { IMAGE_SLOTS } from "@/lib/image-slots";
 import { ListScreen, type FilterChip, type SortOption } from "@/components/ListScreen";
 import { useStore } from "@/lib/store";
 import { STATUS_LABELS, type Job } from "@/lib/domain";
-import { Wrench } from "lucide-react";
+import { JobMapView } from "@/components/JobMapView";
+import { List, Map, Wrench } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/jobs/")({
   validateSearch: (search: Record<string, unknown>): { filter?: string } =>
@@ -37,6 +39,7 @@ function startOfToday(): number {
 function Jobs() {
   const { data, can, currentUser, customer, property } = useStore();
   const { filter } = Route.useSearch();
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   const base = can.seeAllJobs
     ? data.jobs
@@ -104,39 +107,74 @@ function Jobs() {
 
   return (
     <div>
-      <PageHeader title="Jobs" subtitle="Tap a job to work through it on site" />
-      <ListScreen<Job>
-        listId="jobs"
-        initialFilterId={filter}
-        items={base}
-        noun="jobs"
-        keyFor={(job) => job.id}
-        searchFields={(job) => {
-          const place = property(job.propertyId);
-          return [
-            job.jobNumber,
-            job.title,
-            job.reportedIssue,
-            STATUS_LABELS[job.status],
-            customer(job.customerId)?.name,
-            customer(job.customerId)?.phone,
-            place?.line1,
-            place?.town,
-            place?.postcode,
-          ];
-        }}
-        filterChips={filterChips}
-        sortOptions={sortOptions}
-        renderRow={(job) => <JobRow job={job} />}
-        emptyState={
-          <EmptyState
-            icon={Wrench}
-            image={IMAGE_SLOTS.jobsEmpty}
-            title="No jobs here yet"
-            description="Completed jobs appear here once the completion gate passes."
-          />
+      <PageHeader
+        title="Jobs"
+        subtitle="Tap a job to work through it on site"
+        action={
+          <div className="flex rounded-xl border border-line/40 bg-paper/10 p-1 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "tap flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                viewMode === "list" ? "bg-paper text-ink shadow-sm" : "text-fog hover:text-paper",
+              )}
+            >
+              <List className="size-3.5" />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={cn(
+                "tap flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                viewMode === "map" ? "bg-paper text-ink shadow-sm" : "text-fog hover:text-paper",
+              )}
+            >
+              <Map className="size-3.5" />
+              Map
+            </button>
+          </div>
         }
       />
+      {viewMode === "map" ? (
+        <div className="p-4">
+          <JobMapView jobs={base} getCustomer={customer} getProperty={property} />
+        </div>
+      ) : (
+        <ListScreen<Job>
+          listId="jobs"
+          initialFilterId={filter}
+          items={base}
+          noun="jobs"
+          keyFor={(job) => job.id}
+          searchFields={(job) => {
+            const place = property(job.propertyId);
+            return [
+              job.jobNumber,
+              job.title,
+              job.reportedIssue,
+              STATUS_LABELS[job.status],
+              customer(job.customerId)?.name,
+              customer(job.customerId)?.phone,
+              place?.line1,
+              place?.town,
+              place?.postcode,
+            ];
+          }}
+          filterChips={filterChips}
+          sortOptions={sortOptions}
+          renderRow={(job) => <JobRow job={job} />}
+          emptyState={
+            <EmptyState
+              icon={Wrench}
+              image={IMAGE_SLOTS.jobsEmpty}
+              title="No jobs here yet"
+              description="Completed jobs appear here once the completion gate passes."
+            />
+          }
+        />
+      )}
     </div>
   );
 }

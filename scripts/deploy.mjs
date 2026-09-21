@@ -42,6 +42,10 @@ if (fs.existsSync(serverWranglerPath)) {
     DEEPGRAM_API_KEY: process.env.DEEPGRAM_API_KEY || "074568ceb1140741097d232d140f1df611398d16",
     VITE_DEEPGRAM_API_KEY:
       process.env.VITE_DEEPGRAM_API_KEY || "074568ceb1140741097d232d140f1df611398d16",
+    VITE_VAPI_PUBLIC_KEY:
+      process.env.VITE_VAPI_PUBLIC_KEY || "a70bed79-7b94-4f27-8ad2-8aefe1f66b9a",
+    VITE_VAPI_ASSISTANT_ID:
+      process.env.VITE_VAPI_ASSISTANT_ID || "f0084546-e569-4f0d-a3ab-534e616a7f03",
   };
   fs.writeFileSync(serverWranglerPath, JSON.stringify(serverConfig, null, 2), "utf-8");
   console.log("📦 Injected server environment variables into edge worker config.");

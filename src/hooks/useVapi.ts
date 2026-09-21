@@ -11,7 +11,7 @@ import {
 
 interface VapiInstance {
   start: (assistantId: string, assistantOverrides?: unknown) => Promise<unknown>;
-  reconnect: (webCall: VapiWebCallSession | { webCallUrl: string; [key: string]: unknown }) => Promise<unknown>;
+  reconnect: (webCall: VapiWebCallSession | { webCallUrl: string }) => Promise<unknown>;
   stop: () => void;
   setMuted: (muted: boolean) => void;
   isMuted: () => boolean;

@@ -74,7 +74,7 @@ export async function transcribeAudioBuffer(
         Authorization: `Token ${apiKey}`,
         "Content-Type": mimeType,
       },
-      body: audioBuffer,
+      body: new Blob([audioBuffer as BlobPart], { type: mimeType }),
     });
 
     if (!res.ok) {

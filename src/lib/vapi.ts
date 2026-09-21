@@ -25,22 +25,19 @@ export interface VapiWebCallSession {
   assistantId?: string;
   transport?: {
     callToken?: string;
-    [key: string]: unknown;
+    conversationType?: string;
   };
   artifactPlan?: {
     videoRecordingEnabled?: boolean;
-    [key: string]: unknown;
   };
-  [key: string]: unknown;
 }
 
 export const createVapiWebCallSession = createServerFn({ method: "POST" })
   .validator((data?: { assistantId?: string }) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<VapiWebCallSession> => {
     const assistantId = data?.assistantId || VAPI_ASSISTANT_ID;
-    const publicKey =
-      (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env?.VITE_VAPI_PUBLIC_KEY ||
-      VAPI_PUBLIC_KEY;
+    const envSource = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env;
+    const publicKey = (envSource ? envSource["VITE_VAPI_PUBLIC_KEY"] : undefined) || VAPI_PUBLIC_KEY;
 
     const res = await fetch("https://api.vapi.ai/call/web", {
       method: "POST",

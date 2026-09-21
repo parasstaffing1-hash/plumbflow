@@ -213,7 +213,7 @@ function LoginPage() {
     const acc = data.accounts.find((a) => a.email.toLowerCase() === cleanEmail);
     const ownerName =
       acc?.ownerName ||
-      cleanEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") ||
+      (cleanEmail.split("@")[0] ?? "").replace(/[^a-zA-Z]/g, " ") ||
       "Trade Specialist";
 
     setSendingReset(true);

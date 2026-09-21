@@ -768,7 +768,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
           } else {
             const now = new Date();
             const rawName =
-              cleanEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") || "Trade Specialist";
+              (cleanEmail.split("@")[0] ?? "").replace(/[^a-zA-Z]/g, " ") || "Trade Specialist";
             const cleanOwner = rawName.charAt(0).toUpperCase() + rawName.slice(1);
             const cleanBiz = `${cleanOwner}'s Plumbing`;
             const newAccount: Account = {

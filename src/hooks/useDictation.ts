@@ -45,7 +45,8 @@ export function useDictation(onText: (text: string) => void) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hasMedia = Boolean(
-        navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined",
+        typeof navigator.mediaDevices?.getUserMedia === "function" &&
+          typeof MediaRecorder !== "undefined",
       );
       const hasSpeech = getSpeechRecognitionCtor() !== null;
       setSupported(hasMedia || hasSpeech);

@@ -80,21 +80,22 @@ async function handleVapiProxy(request: Request, env: unknown): Promise<Response
   });
 
   const envObj = env && typeof env === "object" ? (env as Record<string, string>) : {};
+  const processEnv = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env;
   const vapiPublicKey =
-    envObj.VITE_VAPI_PUBLIC_KEY ||
-    (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env?.VITE_VAPI_PUBLIC_KEY ||
+    envObj["VITE_VAPI_PUBLIC_KEY"] ||
+    (processEnv ? processEnv["VITE_VAPI_PUBLIC_KEY"] : undefined) ||
     "a70bed79-7b94-4f27-8ad2-8aefe1f66b9a";
 
   if (!forwardHeaders.has("authorization")) {
     forwardHeaders.set("authorization", `Bearer ${vapiPublicKey}`);
   }
 
-  let body: string | undefined;
+  let body: string | null = null;
   if (request.method !== "GET" && request.method !== "HEAD") {
     try {
       body = await request.text();
     } catch {
-      body = undefined;
+      body = null;
     }
   }
 

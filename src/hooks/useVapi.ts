@@ -3,12 +3,15 @@ import { toast } from "sonner";
 import {
   VAPI_PUBLIC_KEY,
   VAPI_ASSISTANT_ID,
+  createVapiWebCallSession,
   type VapiCallStatus,
   type VapiTranscriptMessage,
+  type VapiWebCallSession,
 } from "@/lib/vapi";
 
 interface VapiInstance {
   start: (assistantId: string, assistantOverrides?: unknown) => Promise<unknown>;
+  reconnect: (webCall: VapiWebCallSession | { webCallUrl: string; [key: string]: unknown }) => Promise<unknown>;
   stop: () => void;
   setMuted: (muted: boolean) => void;
   isMuted: () => boolean;
@@ -17,7 +20,7 @@ interface VapiInstance {
   say?: (text: string) => void;
 }
 
-type VapiConstructor = new (publicKey: string) => VapiInstance;
+type VapiConstructor = new (publicKey: string, apiBaseUrl?: string) => VapiInstance;
 
 function extractVapiError(err: unknown): { message: string } {
   if (!err) return { message: "Connection issue" };
@@ -29,6 +32,8 @@ function extractVapiError(err: unknown): { message: string } {
       msg.toLowerCase().includes("permission")
     ) {
       msg = "Microphone access was denied. Please allow microphone permissions in your browser.";
+    } else if (msg.includes("Failed to fetch")) {
+      msg = "Voice server connection timed out. Please tap Dave to reconnect.";
     }
     return { message: msg };
   }
@@ -111,7 +116,9 @@ export function useVapi() {
       throw new Error("Unable to locate Vapi SDK constructor.");
     }
 
-    const client = new VapiClass(VAPI_PUBLIC_KEY);
+    // Connect via same-origin proxy to bypass adblockers and cross-origin fetch restrictions
+    const baseUrl = `${window.location.origin}/api/vapi`;
+    const client = new VapiClass(VAPI_PUBLIC_KEY, baseUrl);
 
     // Call connected events
     client.on("call-start", () => {
@@ -224,14 +231,40 @@ export function useVapi() {
           throw new Error("Microphone access requires a secure HTTPS browser connection.");
         }
 
+        // Test microphone permission first to ensure clean browser prompt
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach((track) => track.stop());
+        } catch (micErr) {
+          console.warn("[Vapi] Microphone check issue:", micErr);
+          throw new Error("Microphone access was denied or unavailable. Please allow microphone permissions in your browser.");
+        }
+
         const client = await initFreshClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
 
-        // Start voice call purely via Vapi Assistant
-        const webCall = await client.start(targetId);
+        // Dual-Layer Connection Strategy:
+        // Strategy 1: Connect via same-origin proxy (/api/vapi/call/web)
+        let callActive = false;
+        try {
+          const webCall = await client.start(targetId);
+          if (webCall) {
+            callActive = true;
+            setStatus("active");
+            connectingRef.current = false;
+          }
+        } catch (primaryErr) {
+          console.warn("[Vapi] Direct proxy start had issue, initiating server fallback:", primaryErr);
+        }
 
-        // Immediate activation once start() resolves
-        if (webCall) {
+        // Strategy 2: Fallback to server-side session creation and direct Daily reconnect
+        if (!callActive && status !== "active") {
+          console.log("[Vapi] Triggering server-side session creation fallback...");
+          const session = await createVapiWebCallSession({ data: { assistantId: targetId } });
+          if (!session?.webCallUrl) {
+            throw new Error("Unable to establish voice session. Please try again in a moment.");
+          }
+          await client.reconnect(session);
           setStatus("active");
           connectingRef.current = false;
         }

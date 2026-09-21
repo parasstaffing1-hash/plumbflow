@@ -52,6 +52,87 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+async function handleVapiProxy(request: Request, env: unknown): Promise<Response> {
+  const url = new URL(request.url);
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+  };
+
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    });
+  }
+
+  // Remove leading /api/vapi or /api/vapi/
+  const subPath = url.pathname.replace(/^\/api\/vapi\/?/, "");
+  const targetUrl = `https://api.vapi.ai/${subPath}${url.search}`;
+
+  const forwardHeaders = new Headers();
+  request.headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    if (lower !== "host" && lower !== "origin" && lower !== "referer") {
+      forwardHeaders.set(key, value);
+    }
+  });
+
+  const envObj = env && typeof env === "object" ? (env as Record<string, string>) : {};
+  const vapiPublicKey =
+    envObj.VITE_VAPI_PUBLIC_KEY ||
+    (globalThis as unknown as { process?: { env?: Record<string, string> } }).process?.env?.VITE_VAPI_PUBLIC_KEY ||
+    "a70bed79-7b94-4f27-8ad2-8aefe1f66b9a";
+
+  if (!forwardHeaders.has("authorization")) {
+    forwardHeaders.set("authorization", `Bearer ${vapiPublicKey}`);
+  }
+
+  let body: string | undefined;
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    try {
+      body = await request.text();
+    } catch {
+      body = undefined;
+    }
+  }
+
+  try {
+    const vapiRes = await fetch(targetUrl, {
+      method: request.method,
+      headers: forwardHeaders,
+      body,
+    });
+
+    const responseHeaders = new Headers(vapiRes.headers);
+    Object.entries(corsHeaders).forEach(([k, v]) => {
+      responseHeaders.set(k, v);
+    });
+
+    return new Response(vapiRes.body, {
+      status: vapiRes.status,
+      statusText: vapiRes.statusText,
+      headers: responseHeaders,
+    });
+  } catch (err) {
+    console.error("[Vapi Proxy] Error connecting to Vapi API:", err);
+    return new Response(
+      JSON.stringify({
+        error: "Vapi proxy error",
+        message: err instanceof Error ? err.message : String(err),
+      }),
+      {
+        status: 502,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      },
+    );
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     if (env && typeof env === "object") {
@@ -61,6 +142,11 @@ export default {
       }
       const targetEnv = g.process.env ?? (g.process.env = {});
       Object.assign(targetEnv, env as Record<string, string>);
+    }
+
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/vapi")) {
+      return await handleVapiProxy(request, env);
     }
     try {
       const handler = await getServerEntry();

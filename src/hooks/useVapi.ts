@@ -32,12 +32,17 @@ function extractVapiError(err: unknown): { message: string } {
       msg.toLowerCase().includes("permission")
     ) {
       msg = "Microphone access was denied. Please allow microphone permissions in your browser.";
+    } else if (msg.toLowerCase().includes("concurrency")) {
+      msg = "Dave is currently wrapping up a previous voice call. Please wait 15 seconds and tap retry.";
     } else if (msg.includes("Failed to fetch")) {
       msg = "Voice server connection timed out. Please tap Dave to reconnect.";
     }
     return { message: msg };
   }
   if (typeof err === "string") {
+    if (err.toLowerCase().includes("concurrency")) {
+      return { message: "Dave is currently wrapping up a previous voice call. Please wait 15 seconds and tap retry." };
+    }
     if (err.includes("[object Object]")) {
       return { message: "Unable to connect to Voice AI. Please check microphone permissions." };
     }
@@ -63,6 +68,9 @@ function extractVapiError(err: unknown): { message: string } {
     };
 
     let detail = unwrap(obj["error"]) || unwrap(obj["message"]) || unwrap(obj["errorMsg"]);
+    if (detail.toLowerCase().includes("concurrency")) {
+      return { message: "Dave is currently wrapping up a previous voice call. Please wait 15 seconds and tap retry." };
+    }
     if (!detail || detail.includes("[object Object]")) {
       detail = "Connection issue. Please check microphone permissions and retry.";
     }
@@ -243,30 +251,42 @@ export function useVapi() {
         const client = await initFreshClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
 
-        // Dual-Layer Connection Strategy:
-        // Strategy 1: Connect via same-origin proxy (/api/vapi/call/web)
-        let callActive = false;
         try {
           const webCall = await client.start(targetId);
           if (webCall) {
-            callActive = true;
             setStatus("active");
             connectingRef.current = false;
           }
-        } catch (primaryErr) {
-          console.warn("[Vapi] Direct proxy start had issue, initiating server fallback:", primaryErr);
-        }
+        } catch (startErr) {
+          console.warn("[Vapi] Direct proxy start had issue:", startErr);
+          const errText = String(startErr || "");
+          const errObj = extractVapiError(startErr);
 
-        // Strategy 2: Fallback to server-side session creation and direct Daily reconnect
-        if (!callActive && status !== "active") {
-          console.log("[Vapi] Triggering server-side session creation fallback...");
-          const session = await createVapiWebCallSession({ data: { assistantId: targetId } });
-          if (!session?.webCallUrl) {
-            throw new Error("Unable to establish voice session. Please try again in a moment.");
+          // If concurrency limit was hit, DO NOT attempt a secondary call!
+          if (
+            errObj.message.toLowerCase().includes("concurrency") ||
+            errText.toLowerCase().includes("concurrency")
+          ) {
+            throw new Error("Dave is currently wrapping up a previous voice call. Please wait 15 seconds and tap retry.");
           }
-          await client.reconnect(session);
-          setStatus("active");
-          connectingRef.current = false;
+
+          // If blocked by client fetch / extension, fall back to server session creation
+          if (
+            errObj.message.toLowerCase().includes("fetch") ||
+            errText.toLowerCase().includes("fetch") ||
+            errText.toLowerCase().includes("network")
+          ) {
+            console.log("[Vapi] Client fetch issue detected, triggering server session fallback...");
+            const session = await createVapiWebCallSession({ data: { assistantId: targetId } });
+            if (!session?.webCallUrl) {
+              throw new Error("Unable to establish voice session. Please try again in a moment.");
+            }
+            await client.reconnect(session);
+            setStatus("active");
+            connectingRef.current = false;
+          } else {
+            throw startErr;
+          }
         }
       } catch (err) {
         console.error("[Vapi] Start exception:", err);

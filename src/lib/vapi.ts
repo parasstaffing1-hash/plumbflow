@@ -53,7 +53,21 @@ export const createVapiWebCallSession = createServerFn({ method: "POST" })
 
     if (!res.ok) {
       const errText = await res.text();
-      throw new Error(`Failed to create Vapi web call session (${res.status}): ${errText}`);
+      try {
+        const parsed = JSON.parse(errText) as { message?: string; error?: string };
+        if (
+          parsed?.message?.toLowerCase().includes("concurrency") ||
+          parsed?.error?.toLowerCase().includes("concurrency") ||
+          errText.toLowerCase().includes("concurrency")
+        ) {
+          throw new Error("Dave is currently wrapping up a previous voice call. Please wait 15 seconds and retry.");
+        }
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message.includes("Dave is currently wrapping up")) {
+          throw parseErr;
+        }
+      }
+      throw new Error(`Voice server error (${res.status}): ${errText}`);
     }
 
     const session = (await res.json()) as VapiWebCallSession;

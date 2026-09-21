@@ -105,15 +105,15 @@ async function handleVapiProxy(request: Request, env: unknown): Promise<Response
       body,
     });
 
-    const responseHeaders = new Headers(vapiRes.headers);
-    Object.entries(corsHeaders).forEach(([k, v]) => {
-      responseHeaders.set(k, v);
-    });
+    const responseText = await vapiRes.text();
 
-    return new Response(vapiRes.body, {
+    return new Response(responseText, {
       status: vapiRes.status,
       statusText: vapiRes.statusText,
-      headers: responseHeaders,
+      headers: {
+        "Content-Type": vapiRes.headers.get("content-type") || "application/json; charset=utf-8",
+        ...corsHeaders,
+      },
     });
   } catch (err) {
     console.error("[Vapi Proxy] Error connecting to Vapi API:", err);

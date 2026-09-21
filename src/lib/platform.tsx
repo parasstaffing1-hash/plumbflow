@@ -750,18 +750,65 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
       resetPassword: (email: string, newPassword: string) => {
         const cleanEmail = email.trim().toLowerCase();
         const match = data.accounts.find((a) => a.email.toLowerCase() === cleanEmail);
-        if (!match) return false;
+
         update((draft) => {
-          const acc = draft.accounts.find((a) => a.id === match.id);
-          if (acc) {
-            acc.password = newPassword;
+          if (match) {
+            const acc = draft.accounts.find((a) => a.id === match.id);
+            if (acc) {
+              acc.password = newPassword;
+              draft.audit.unshift({
+                id: uid("aud"),
+                at: new Date().toISOString(),
+                actor: acc.ownerName,
+                accountId: acc.id,
+                action: "Password reset",
+                reason: "User requested password reset",
+              });
+            }
+          } else {
+            const now = new Date();
+            const rawName =
+              cleanEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") || "Trade Specialist";
+            const cleanOwner = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+            const cleanBiz = `${cleanOwner}'s Plumbing`;
+            const newAccount: Account = {
+              id: uid("org"),
+              slug: cleanBiz
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, ""),
+              businessName: cleanBiz,
+              ownerName: cleanOwner,
+              email: cleanEmail,
+              phone: "07700 900123",
+              town: "",
+              postcode: "",
+              signupDate: now.toISOString(),
+              subscriptionStatus: "trialing",
+              trialEndsAt: new Date(
+                now.getTime() + data.settings.trialDays * 86_400_000,
+              ).toISOString(),
+              lastActiveAt: now.toISOString(),
+              lastLoginAt: now.toISOString(),
+              customersCount: 0,
+              jobsCompleted: 0,
+              quotesSent: 0,
+              quotesAccepted: 0,
+              invoicedTotal: 0,
+              collectedTotal: 0,
+              setup: setup(1),
+              password: newPassword,
+              emailVerified: true,
+              emailVerifiedAt: now.toISOString(),
+            };
+            draft.accounts.unshift(newAccount);
             draft.audit.unshift({
               id: uid("aud"),
-              at: new Date().toISOString(),
-              actor: acc.ownerName,
-              accountId: acc.id,
-              action: "Password reset",
-              reason: "User requested password reset",
+              at: now.toISOString(),
+              actor: cleanOwner,
+              accountId: newAccount.id,
+              action: "Account provisioned via password reset",
+              reason: "User reset password on new browser device",
             });
           }
           return draft;

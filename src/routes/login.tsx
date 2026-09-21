@@ -211,10 +211,10 @@ function LoginPage() {
     }
 
     const acc = data.accounts.find((a) => a.email.toLowerCase() === cleanEmail);
-    if (!acc) {
-      toast.error("No account found with that email address.");
-      return;
-    }
+    const ownerName =
+      acc?.ownerName ||
+      cleanEmail.split("@")[0].replace(/[^a-zA-Z]/g, " ") ||
+      "Trade Specialist";
 
     setSendingReset(true);
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -224,17 +224,15 @@ function LoginPage() {
       const res = await requestPasswordResetEmail({
         data: {
           to: cleanEmail,
-          ownerName: acc.ownerName,
+          ownerName,
           resetCode: code,
         },
       });
 
-      if (res.success) {
+      if (res.success || res.isSandboxRestriction) {
         toast.success(`Reset code sent to ${cleanEmail}! Check your inbox.`);
         setSentNotice(`Verification reset code sent to ${cleanEmail}. Check your inbox or spam folder.`);
-      } else if (res.isSandboxRestriction) {
-        toast.success(`Reset code sent to ${cleanEmail}! Check your inbox.`);
-        setSentNotice(`Verification reset code dispatched to ${cleanEmail}. Check your inbox.`);
+        setResetStep("code");
       } else {
         toast.error(res.error || "Could not dispatch reset email. Please try again.");
       }
@@ -242,7 +240,6 @@ function LoginPage() {
       toast.error("Network error while requesting reset code. Please try again.");
     } finally {
       setSendingReset(false);
-      setResetStep("code");
     }
   }
 
@@ -499,6 +496,18 @@ function LoginPage() {
                     </button>
                   </div>
                 </label>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSendResetCode}
+                    disabled={sendingReset}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-deep hover:underline disabled:opacity-50"
+                  >
+                    <RefreshCw className={`size-3.5 ${sendingReset ? "animate-spin" : ""}`} />
+                    <span>{sendingReset ? "Sending code..." : "Didn't receive code? Resend email"}</span>
+                  </button>
+                </div>
 
                 <div className="flex gap-3 pt-2">
                   <button

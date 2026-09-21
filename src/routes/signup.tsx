@@ -247,12 +247,19 @@ function SignupPage() {
       });
 
       if (res.success) {
-        toast.success(`Verification code sent to ${cleanEmail}. Check your inbox.`);
+        toast.success(`Verification code sent to ${cleanEmail}. Check your inbox or spam.`);
       } else {
-        toast.success(`Verification code dispatched to ${cleanEmail}. Check your inbox.`);
+        console.warn("[PlumbFlow] Email delivery notice:", res.error);
+        if (res.error) {
+          toast.error(res.error);
+        } else {
+          toast.info(`Verification code requested for ${cleanEmail}.`);
+        }
       }
-    } catch {
-      toast.success(`Verification code dispatched to ${cleanEmail}. Check your inbox.`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("[PlumbFlow] Signup email exception:", msg);
+      toast.info(`Verification code requested for ${cleanEmail}.`);
     } finally {
       savePendingSession(
         {
@@ -295,12 +302,19 @@ function SignupPage() {
         },
       });
       if (res.success) {
-        toast.success("New verification code sent! Check your inbox.");
+        toast.success("New verification code sent! Check your inbox or spam.");
       } else {
-        toast.success("New verification code dispatched! Check your inbox.");
+        console.warn("[PlumbFlow] Resend email delivery notice:", res.error);
+        if (res.error) {
+          toast.error(res.error);
+        } else {
+          toast.info("New verification code requested.");
+        }
       }
-    } catch {
-      toast.success("New verification code dispatched! Check your inbox.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn("[PlumbFlow] Resend exception:", msg);
+      toast.info("New verification code requested.");
     } finally {
       savePendingSession(form, code);
       setBusy(false);

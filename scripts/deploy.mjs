@@ -26,7 +26,8 @@ if (fs.existsSync(serverWranglerPath)) {
   serverConfig.vars = {
     ...(serverConfig.vars || {}),
     RESEND_API_KEY: process.env.RESEND_API_KEY || "",
-    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || "RCH PlumbFlow <onboarding@resend.dev>",
+    RESEND_FROM_EMAIL:
+      process.env.RESEND_FROM_EMAIL || "RCH PlumbFlow <notifications@rchplumbflow.co.uk>",
     R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID || "",
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID || "",
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY || "",

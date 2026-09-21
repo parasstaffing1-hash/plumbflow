@@ -6,7 +6,7 @@ function getResendClient() {
 }
 
 function getDefaultFrom() {
-  return process.env["RESEND_FROM_EMAIL"] || "RCH PlumbFlow <onboarding@resend.dev>";
+  return process.env["RESEND_FROM_EMAIL"] || "RCH PlumbFlow <notifications@rchplumbflow.co.uk>";
 }
 
 export const resend = {

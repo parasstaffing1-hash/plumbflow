@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import {
   VAPI_PUBLIC_KEY,
   VAPI_ASSISTANT_ID,
-  DEEPGRAM_TRANSCRIBER_CONFIG,
   type VapiCallStatus,
   type VapiTranscriptMessage,
 } from "@/lib/vapi";
@@ -228,8 +227,8 @@ export function useVapi() {
         const client = await initFreshClient();
         const targetId = overrideAssistantId || VAPI_ASSISTANT_ID;
 
-        // Start call with Deepgram Nova-2 STT overrides & UK heating terms
-        const webCall = await client.start(targetId, DEEPGRAM_TRANSCRIBER_CONFIG);
+        // Start voice call purely via Vapi Assistant
+        const webCall = await client.start(targetId);
 
         // Immediate activation once start() resolves
         if (webCall) {

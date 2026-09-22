@@ -14,7 +14,7 @@ import {
   invoicePaid,
   type InvoiceStatus,
 } from "@/lib/domain";
-import { Lock, TriangleAlert } from "lucide-react";
+import { Lock, TriangleAlert, Mic } from "lucide-react";
 
 export const Route = createFileRoute("/app/money")({
   head: () => ({
@@ -84,6 +84,13 @@ function Money() {
     <div>
       <PageHeader title="Money" subtitle="Invoices, payments and totals" />
       <main className="space-y-4 px-4 py-5">
+        <Link
+          to="/app/voice-invoices"
+          className="tap flex items-center gap-2 rounded-xl border border-amber/30 bg-amber/5 px-4 py-3 text-base font-semibold text-amber-deep"
+        >
+          <Mic className="size-5" aria-hidden />
+          Voice Invoices →
+        </Link>
         <div className="rounded-2xl bg-ink p-5 text-paper shadow-[var(--shadow-card)]">
           <p className="label-caps">Total outstanding</p>
           <p className="tabular mt-1 text-4xl font-semibold">{formatCurrency(outstanding)}</p>

@@ -20,10 +20,11 @@ import { cn } from "@/lib/utils";
 import { PlumberAvatar } from "./PlumberAvatar";
 
 const QUICK_PROMPTS = [
+  "Create an invoice for John for a boiler repair, £350",
   "Book an emergency boiler repair for today",
   "How many jobs do I have scheduled today?",
   "Draft a call-out quote for a leaking radiator",
-  "Summarize my overdue customer invoices",
+  "List my recent voice invoices",
 ];
 
 export function FloatingVoiceAgent() {

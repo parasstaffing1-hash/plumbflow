@@ -29,6 +29,7 @@ import { Route as AppPriceBookRouteImport } from './routes/app.price-book'
 import { Route as AppQuotesRouteImport } from './routes/app.quotes'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppTasksRouteImport } from './routes/app.tasks'
+import { Route as AppVoiceInvoicesRouteImport } from './routes/app.voice-invoices'
 import { Route as BookIndexRouteImport } from './routes/book.index'
 import { Route as BookOrgSlugRouteImport } from './routes/book.$orgSlug'
 import { Route as EmbedOrgSlugRouteImport } from './routes/embed.$orgSlug'
@@ -149,6 +150,11 @@ const AppTasksRoute = AppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppVoiceInvoicesRoute = AppVoiceInvoicesRouteImport.update({
+  id: '/voice-invoices',
+  path: '/voice-invoices',
+  getParentRoute: () => AppRoute,
+} as any)
 const BookIndexRoute = BookIndexRouteImport.update({
   id: '/book/',
   path: '/book/',
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/app/quotes': typeof AppQuotesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/tasks': typeof AppTasksRoute
+  '/app/voice-invoices': typeof AppVoiceInvoicesRoute
   '/book/$orgSlug': typeof BookOrgSlugRouteWithChildren
   '/embed/$orgSlug': typeof EmbedOrgSlugRoute
   '/owner/onboarding': typeof OwnerOnboardingRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/app/quotes': typeof AppQuotesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/tasks': typeof AppTasksRoute
+  '/app/voice-invoices': typeof AppVoiceInvoicesRoute
   '/embed/$orgSlug': typeof EmbedOrgSlugRoute
   '/owner/onboarding': typeof OwnerOnboardingRoute
   '/owner/settings': typeof OwnerSettingsRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/app/quotes': typeof AppQuotesRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/tasks': typeof AppTasksRoute
+  '/app/voice-invoices': typeof AppVoiceInvoicesRoute
   '/book/$orgSlug': typeof BookOrgSlugRouteWithChildren
   '/embed/$orgSlug': typeof EmbedOrgSlugRoute
   '/owner/onboarding': typeof OwnerOnboardingRoute
@@ -389,6 +398,7 @@ export interface FileRouteTypes {
     | '/app/quotes'
     | '/app/settings'
     | '/app/tasks'
+    | '/app/voice-invoices'
     | '/book/$orgSlug'
     | '/embed/$orgSlug'
     | '/owner/onboarding'
@@ -428,6 +438,7 @@ export interface FileRouteTypes {
     | '/app/quotes'
     | '/app/settings'
     | '/app/tasks'
+    | '/app/voice-invoices'
     | '/embed/$orgSlug'
     | '/owner/onboarding'
     | '/owner/settings'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/app/quotes'
     | '/app/settings'
     | '/app/tasks'
+    | '/app/voice-invoices'
     | '/book/$orgSlug'
     | '/embed/$orgSlug'
     | '/owner/onboarding'
@@ -648,6 +660,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/voice-invoices': {
+      id: '/app/voice-invoices'
+      path: '/voice-invoices'
+      fullPath: '/app/voice-invoices'
+      preLoaderRoute: typeof AppVoiceInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/book/': {
       id: '/book/'
       path: '/book'
@@ -794,6 +813,7 @@ interface AppRouteChildren {
   AppQuotesRoute: typeof AppQuotesRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
+  AppVoiceInvoicesRoute: typeof AppVoiceInvoicesRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCustomersCustomerIdRoute: typeof AppCustomersCustomerIdRoute
   AppInvoicesInvoiceIdRoute: typeof AppInvoicesInvoiceIdRoute
@@ -813,6 +833,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppQuotesRoute: AppQuotesRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
+  AppVoiceInvoicesRoute: AppVoiceInvoicesRoute,
   AppIndexRoute: AppIndexRoute,
   AppCustomersCustomerIdRoute: AppCustomersCustomerIdRoute,
   AppInvoicesInvoiceIdRoute: AppInvoicesInvoiceIdRoute,

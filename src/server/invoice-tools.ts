@@ -204,82 +204,112 @@ export async function handleVapiToolCall(request: Request): Promise<Response> {
     return new Response(null, { status: 204, headers: cors });
   }
 
+  const url = new URL(request.url);
+  const path = url.pathname.toLowerCase();
+
+  // Support GET request for listing or health check
+  if (request.method === "GET") {
+    if (path.includes("list") || path.endsWith("/api/vapi-tools") || path.endsWith("/api/vapi-tools/")) {
+      const listRes = await processListInvoices();
+      return json(listRes, 200, cors);
+    }
+    return json({ status: "ok", message: "Vapi voice invoicing endpoint ready. Send POST with invoice parameters." }, 200, cors);
+  }
+
   try {
-    const body = (await request.json()) as VapiPayload;
-    const msg = body.message;
+    let rawBody: Record<string, unknown> = {};
+    try {
+      rawBody = (await request.json()) as Record<string, unknown>;
+    } catch {
+      rawBody = {};
+    }
 
-    // Parse tool calls from Vapi payload
-    let toolCalls: VapiToolCall[] = [];
+    // ── Mode A: Standard Vapi Server Webhook payload ({ message: { toolCallList: [...] } }) ──
+    const msg = rawBody["message"] as VapiPayload["message"] | undefined;
+    if (msg && (msg.toolCallList || msg.functionCall)) {
+      let toolCalls: VapiToolCall[] = [];
 
-    if (msg.toolCallList && msg.toolCallList.length > 0) {
-      toolCalls = msg.toolCallList;
-    } else if (msg.functionCall) {
-      toolCalls = [
-        {
-          id: "legacy_call",
-          type: "function",
-          function: {
-            name: msg.functionCall.name,
-            arguments: msg.functionCall.parameters,
+      if (msg.toolCallList && msg.toolCallList.length > 0) {
+        toolCalls = msg.toolCallList;
+      } else if (msg.functionCall) {
+        toolCalls = [
+          {
+            id: "legacy_call",
+            type: "function",
+            function: {
+              name: msg.functionCall.name,
+              arguments: msg.functionCall.parameters,
+            },
           },
-        },
-      ];
-    }
-
-    if (toolCalls.length === 0) {
-      return json({ error: "No tool calls found" }, 400, cors);
-    }
-
-    const results: { toolCallId: string; result: string }[] = [];
-
-    for (const tc of toolCalls) {
-      const fnName = tc.function.name;
-      const args =
-        typeof tc.function.arguments === "string"
-          ? (JSON.parse(tc.function.arguments) as Record<string, unknown>)
-          : tc.function.arguments;
-
-      let result: unknown;
-
-      switch (fnName) {
-        case "create_invoice":
-          result = await processCreateInvoice(args as unknown as CreateInvoiceArgs);
-          break;
-        case "send_invoice":
-          result = await processSendInvoice(args as unknown as SendInvoiceArgs);
-          break;
-        case "list_invoices":
-          result = await processListInvoices();
-          break;
-        default:
-          result = {
-            success: false,
-            error_code: "UNKNOWN_TOOL",
-            message: `Unknown tool: ${fnName}. Available tools: create_invoice, send_invoice, list_invoices.`,
-          };
+        ];
       }
 
-      results.push({ toolCallId: tc.id, result: JSON.stringify(result) });
+      const results: { toolCallId: string; result: string }[] = [];
+
+      for (const tc of toolCalls) {
+        const fnName = tc.function.name;
+        const args =
+          typeof tc.function.arguments === "string"
+            ? (JSON.parse(tc.function.arguments) as Record<string, unknown>)
+            : tc.function.arguments;
+
+        let result: unknown;
+
+        switch (fnName) {
+          case "create_invoice":
+            result = await processCreateInvoice(args as unknown as CreateInvoiceArgs);
+            break;
+          case "send_invoice":
+            result = await processSendInvoice(args as unknown as SendInvoiceArgs);
+            break;
+          case "list_invoices":
+            result = await processListInvoices();
+            break;
+          default:
+            result = {
+              success: false,
+              error_code: "UNKNOWN_TOOL",
+              message: `Unknown tool: ${fnName}. Available tools: create_invoice, send_invoice, list_invoices.`,
+            };
+        }
+
+        results.push({ toolCallId: tc.id, result: JSON.stringify(result) });
+      }
+
+      return json({ results }, 200, cors);
     }
 
-    return json({ results }, 200, cors);
+    // ── Mode B: Direct Vapi apiRequest Tool payload ({ customer_name, amount, ... }) ──
+    // In Vapi's apiRequest tool, parameters are sent directly in the JSON body.
+    const fnName =
+      (rawBody["function"] as string) ||
+      (rawBody["tool"] as string) ||
+      (rawBody["name"] as string) ||
+      (path.includes("send") ? "send_invoice" : path.includes("list") ? "list_invoices" : "create_invoice");
+
+    if (fnName === "send_invoice" || (rawBody["invoice_number"] && !rawBody["customer_name"])) {
+      const sendRes = await processSendInvoice(rawBody as unknown as SendInvoiceArgs);
+      return json(sendRes, 200, cors);
+    }
+
+    if (fnName === "list_invoices") {
+      const listRes = await processListInvoices();
+      return json(listRes, 200, cors);
+    }
+
+    // Default to create_invoice for direct apiRequest
+    const createRes = await processCreateInvoice(rawBody as unknown as CreateInvoiceArgs);
+    return json(createRes, 200, cors);
   } catch (err) {
     console.error("[VapiTools] Fatal:", err);
     const errMsg = err instanceof Error ? err.message : String(err);
     return json(
       {
-        results: [
-          {
-            toolCallId: "error",
-            result: JSON.stringify({
-              success: false,
-              error_code: "INTERNAL_ERROR",
-              message: `Something went wrong creating the invoice. Please try again. Error: ${errMsg}`,
-            }),
-          },
-        ],
+        success: false,
+        error_code: "INTERNAL_ERROR",
+        message: `Something went wrong creating the invoice. Please try again. Error: ${errMsg}`,
       },
-      200, // Vapi expects 200 even for tool errors
+      200, // Vapi expects 200 even for errors
       cors,
     );
   }

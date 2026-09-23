@@ -15,8 +15,9 @@ export interface OAuthProfile {
 export function getGoogleClientId(): string {
   if (typeof window === "undefined") return "";
   return (
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
     (import.meta as unknown as { env?: Record<string, string> }).env?.["VITE_GOOGLE_CLIENT_ID"] ||
-    ""
+    "206321876549-bp5c71auoh8437839ud2l68m456d4gbj.apps.googleusercontent.com"
   );
 }
 
@@ -42,7 +43,7 @@ export function hasAppleOAuth(): boolean {
  */
 export function startGoogleOAuth(redirectTarget = "/app") {
   const clientId = getGoogleClientId();
-  const redirectUri = `${window.location.origin}/login`;
+  const redirectUri = `${window.location.origin}/api/auth/callback/google`;
 
   const state = JSON.stringify({
     provider: "google",
@@ -59,11 +60,12 @@ export function startGoogleOAuth(redirectTarget = "/app") {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
-    response_type: "token",
+    response_type: "code",
     scope: "openid email profile",
     include_granted_scopes: "true",
     state: encodeURIComponent(state),
     prompt: "select_account",
+    access_type: "online",
   });
 
   window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

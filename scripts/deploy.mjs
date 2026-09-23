@@ -46,6 +46,10 @@ if (fs.existsSync(serverWranglerPath)) {
       process.env.VITE_VAPI_PUBLIC_KEY || "a70bed79-7b94-4f27-8ad2-8aefe1f66b9a",
     VITE_VAPI_ASSISTANT_ID:
       process.env.VITE_VAPI_ASSISTANT_ID || "f0084546-e569-4f0d-a3ab-534e616a7f03",
+    VITE_GOOGLE_CLIENT_ID:
+      process.env.VITE_GOOGLE_CLIENT_ID ||
+      "206321876549-bp5c71auoh8437839ud2l68m456d4gbj.apps.googleusercontent.com",
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
   };
   fs.writeFileSync(serverWranglerPath, JSON.stringify(serverConfig, null, 2), "utf-8");
   console.log("📦 Injected server environment variables into edge worker config.");

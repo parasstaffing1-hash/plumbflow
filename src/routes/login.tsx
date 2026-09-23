@@ -107,7 +107,25 @@ function LoginPage() {
           }
         }
 
-        // Google OAuth Access Token handling
+        // Google OAuth Access Token / Profile handling
+        const userEmailFromHash = hashParams.get("user_email");
+        const userNameFromHash = hashParams.get("user_name");
+        const avatarFromHash = hashParams.get("avatar_url");
+        const targetFromHash = hashParams.get("target");
+
+        if (userEmailFromHash) {
+          const acc = loginWithOAuth({
+            email: userEmailFromHash,
+            name: userNameFromHash || "Google User",
+            provider: "google",
+            avatarUrl: avatarFromHash || undefined,
+          });
+          toast.success(`Signed in with Google as ${acc.ownerName}!`);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          navigate({ to: targetFromHash || redirectTarget });
+          return;
+        }
+
         if (accessToken) {
           const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
             headers: { Authorization: `Bearer ${accessToken}` },

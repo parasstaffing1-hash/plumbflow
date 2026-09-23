@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { handleVapiToolCall, handleVoiceInvoiceApi } from "./server/invoice-tools";
+import { handleGoogleOAuthCallback } from "./server/google-auth";
 import { renderErrorPage } from "./lib/error-page";
 
 type ServerEntry = {
@@ -147,6 +148,9 @@ export default {
     }
 
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/auth/callback/google")) {
+      return await handleGoogleOAuthCallback(request, env);
+    }
     if (url.pathname.startsWith("/api/vapi-tools")) {
       return await handleVapiToolCall(request);
     }
